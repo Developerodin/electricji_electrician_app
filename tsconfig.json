@@ -1,0 +1,9 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "expo-font/build/Font": ["./node_modules/expo-font/build/Font"]
+    }
+  }
+}
