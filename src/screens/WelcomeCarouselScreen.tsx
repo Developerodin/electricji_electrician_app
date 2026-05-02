@@ -1,4 +1,4 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { FC } from 'react';
 import { useRef, useState } from 'react';
 import {
@@ -35,10 +35,14 @@ const SLIDES = [
   },
 ];
 
-type Props = NativeStackScreenProps<RootStackParamList, 'WelcomeCarousel'>;
+type Props = {
+  /** Unused in root stack; screen kept as reference prototype. */
+  navigation: NativeStackNavigationProp<RootStackParamList>;
+};
 
 /**
  * Spec #3 — 3-slide welcome carousel with Skip / Next.
+ * Not mounted in `RootNavigator` (skipped in onboarding flow).
  */
 export const WelcomeCarouselScreen: FC<Props> = ({ navigation }) => {
   const [index, setIndex] = useState(0);

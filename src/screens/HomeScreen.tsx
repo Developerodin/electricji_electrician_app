@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ComponentProps, FC } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Dimensions,
   Modal,
   Platform,
   Pressable,
@@ -14,23 +15,50 @@ import {
   Text,
   View,
 } from 'react-native';
+import Svg, { Line } from 'react-native-svg';
 import type { HomeStackParamList } from '../navigation/types';
 import { IncomingJobLeadModal } from '../components/IncomingJobLeadModal';
 import { AppButton } from '../components/ui';
 import { MOCK_LEADS, TECHNICIAN_PROFILE } from '../mocks';
-import { colors, fonts, radii, scaleFont, shadows, spacing } from '../theme';
+
+const DESIGN_W = 412;
+const RED = '#d9232d';
+const PAGE_BG = '#f6f6f8';
+const NOTIF_BG = '#ae1c24';
+const STATUS_BAR_BG = '#880e1a';
+const TOGGLE_ON = '#229979';
+const STAT_CARD_ANDROID_BG = '#ae1c24';
+const MUTED = '#77878f';
+const TEXT = '#202020';
+const { width: SCREEN_W } = Dimensions.get('window');
 
 type IonName = ComponentProps<typeof Ionicons>['name'];
 
-/**
- * Returns a localized greeting based on the hour of day.
- *
- * @param h - 24h hour value (0-23)
- */
+const SCALE = SCREEN_W / DESIGN_W;
+const CONTENT_MAX = Math.min(380, SCREEN_W - 32);
+
 function greetingForHour(h: number): string {
   if (h < 12) return 'Good Morning';
   if (h < 17) return 'Good Afternoon';
   return 'Good Evening';
+}
+
+function TimelineRail({ height }: { height: number }) {
+  return (
+    <View style={styles.railWrap}>
+      <Svg width={4} height={height} style={styles.railSvg}>
+        <Line
+          x1={2}
+          y1={0}
+          x2={2}
+          y2={height}
+          stroke="#c5c5c5"
+          strokeWidth={2}
+          strokeDasharray="6 6"
+        />
+      </Svg>
+    </View>
+  );
 }
 
 type HomeNav = NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>;
@@ -43,13 +71,15 @@ type QuickAction = {
 };
 
 /**
- * Spec #19 — technician home dashboard (red hero, cards, online toggle).
+ * Technician home — delivery `HomeScreen` visual shell; original navigation and
+ * online / lead behaviour preserved.
  */
 export const HomeScreen: FC = () => {
   const navigation = useNavigation<HomeNav>();
   const [online, setOnline] = useState(false);
   const [confirmOn, setConfirmOn] = useState(false);
   const [leadOpen, setLeadOpen] = useState(false);
+
   const greeting = useMemo(
     () => greetingForHour(new Date().getHours()),
     [],
@@ -58,6 +88,9 @@ export const HomeScreen: FC = () => {
     Platform.OS === 'ios'
       ? 56
       : (StatusBar.currentHeight ?? 24) + 8;
+
+  const firstName = TECHNICIAN_PROFILE.name.split(' ')[0];
+  const pendingLeads = MOCK_LEADS.filter((l) => l.status === 'active').length;
 
   useEffect(() => {
     if (!online) return;
@@ -77,8 +110,6 @@ export const HomeScreen: FC = () => {
     setConfirmOn(false);
     setOnline(true);
   };
-
-  const pendingLeads = MOCK_LEADS.filter((l) => l.status === 'active').length;
 
   const quickActions: QuickAction[] = [
     {
@@ -126,9 +157,7 @@ export const HomeScreen: FC = () => {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}
         showsVerticalScrollIndicator={false}
       >
-        <View
-          style={[styles.heroRed, shadows.hero, { paddingTop: topInset }]}
-        >
+        <View style={[styles.heroRed, { paddingTop: topInset }]}>
           <LinearGradient
             colors={['rgba(0,0,0,0.12)', 'transparent']}
             start={{ x: 0.5, y: 0 }}
@@ -136,10 +165,11 @@ export const HomeScreen: FC = () => {
             style={StyleSheet.absoluteFill}
             pointerEvents="none"
           />
+
           <View style={styles.heroRow}>
             <View>
               <Text style={styles.greeting}>
-                {greeting}, {TECHNICIAN_PROFILE.name.split(' ')[0]}
+                {greeting}, {firstName}
               </Text>
               <Text style={styles.subGreeting}>Electric Ji Technician</Text>
             </View>
@@ -152,162 +182,40 @@ export const HomeScreen: FC = () => {
               ]}
               onPress={() => navigation.navigate('NotificationsCenter')}
             >
-              <Ionicons name="notifications" size={22} color={colors.white} />
+              <Ionicons name="notifications" size={24} color="#FFFFFF" />
               <View style={styles.notifDot} />
             </Pressable>
           </View>
 
           <View style={styles.heroPanel}>
-            <View style={styles.snapshotCard}>
-              <View style={styles.snapHeaderRow}>
-                <Text style={styles.snapTitle}>Today&apos;s snapshot</Text>
-                <View style={styles.surgeBadge}>
-                  <Ionicons name="flash" size={12} color={colors.white} />
-                  <Text style={styles.surgeTxt}>1.5x surge</Text>
-                </View>
-              </View>
-              <View style={styles.snapRow}>
-                <SnapStat label="Earnings" value="₹1,240" />
-                <View style={styles.divider} />
-                <SnapStat label="Jobs done" value="3" />
-                <View style={styles.divider} />
-                <SnapStat label="Active" value="1" />
-              </View>
+            <View style={styles.statRow}>
               <Pressable
+                style={styles.statCardPress}
                 onPress={() => navigation.navigate('EarningsOverview')}
-                style={({ pressed }) => [
-                  styles.snapLinkRow,
-                  pressed && styles.pressedOpacity,
-                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Today earnings, open earnings"
               >
-                <Text style={styles.snapLink}>View earnings</Text>
-                <Ionicons
-                  name="arrow-forward"
-                  size={14}
-                  color={colors.white}
-                />
-              </Pressable>
-            </View>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.perfCard,
-                pressed && styles.pressedScale,
-              ]}
-              onPress={() => navigation.navigate('PerformanceOverview')}
-              accessibilityRole="button"
-              accessibilityLabel="Open performance overview"
-            >
-              <View style={styles.perfHeader}>
-                <Text style={styles.perfTitle}>Performance score</Text>
-                <View style={styles.perfChip}>
-                  <Ionicons
-                    name="trending-up"
-                    size={12}
-                    color={colors.successBright}
-                  />
-                  <Text style={styles.perfChipTxt}>Up 4 pts</Text>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>Today&apos;s Earnings</Text>
+                  <Text style={styles.statValue}>₹1,240</Text>
                 </View>
-              </View>
-              <Text style={styles.perfBig}>
-                {TECHNICIAN_PROFILE.perfScore}
-                <Text style={styles.perfMax}>/100</Text>
-              </Text>
-              <Text style={styles.perfGrade}>
-                Grade {TECHNICIAN_PROFILE.grade} · top 8% in your area
-              </Text>
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.cardLite,
-                pressed && styles.pressedScale,
-              ]}
-              onPress={() =>
-                navigation
-                  .getParent()
-                  ?.navigate('JobsTab', { screen: 'JobInProgress' })
-              }
-            >
-              <View style={styles.cardIcon}>
-                <Ionicons name="hammer-outline" size={18} color={colors.primary} />
-              </View>
-              <View style={styles.cardCol}>
-                <Text style={styles.cardTitle}>Active job</Text>
-                <Text style={styles.cardBody}>
-                  Fan repair · Andheri West
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.muted} />
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.cardLite,
-                pressed && styles.pressedScale,
-              ]}
-              onPress={() =>
-                navigation
-                  .getParent()
-                  ?.navigate('JobsTab', { screen: 'JobLeadInbox' })
-              }
-            >
-              <View style={[styles.cardIcon, styles.cardIconWarn]}>
-                <Ionicons
-                  name="notifications-outline"
-                  size={18}
-                  color={colors.warningInk}
-                />
-              </View>
-              <View style={styles.cardCol}>
-                <Text style={styles.cardTitle}>Incoming leads</Text>
-                <Text style={styles.cardBody}>
-                  {pendingLeads} new {pendingLeads === 1 ? 'lead' : 'leads'} waiting
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.muted} />
-            </Pressable>
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.quickRow}
-            >
-              {quickActions.map((q) => (
-                <Pressable
-                  key={q.id}
-                  style={({ pressed }) => [
-                    styles.quickChip,
-                    pressed && styles.pressedScale,
-                  ]}
-                  onPress={q.onPress}
-                  accessibilityRole="button"
-                  accessibilityLabel={q.label}
-                >
-                  <Ionicons name={q.icon} size={16} color={colors.primary} />
-                  <Text style={styles.quickChipTxt}>{q.label}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-
-            <View style={styles.warnCard}>
-              <Ionicons
-                name="alert-circle-outline"
-                size={18}
-                color={colors.warningInk}
-              />
-              <Text style={styles.warnTxt}>
-                Police verification expires in 12 days
-              </Text>
+              </Pressable>
               <Pressable
+                style={styles.statCardPress}
                 onPress={() =>
-                  navigation.getParent()?.navigate('ProfileTab', {
-                    screen: 'Documents',
+                  navigation.getParent()?.navigate('JobsTab', {
+                    screen: 'JobLeadInbox',
                   })
                 }
-                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Incoming leads"
               >
-                <Text style={styles.warnAction}>Renew</Text>
+                <View style={styles.statCard}>
+                  <Text style={styles.statLabel}>Incoming leads</Text>
+                  <Text style={styles.statValue}>
+                    {pendingLeads} {pendingLeads === 1 ? 'lead' : 'leads'}
+                  </Text>
+                </View>
               </Pressable>
             </View>
 
@@ -315,15 +223,21 @@ export const HomeScreen: FC = () => {
               <View style={styles.onlineLeft}>
                 <View style={styles.onlineTitleRow}>
                   <View
-                    style={[styles.onlineDot, !online && styles.dotOff]}
+                    style={[
+                      styles.onlineDot,
+                      !online && styles.onlineDotOff,
+                    ]}
                   />
                   <Text style={styles.onlineTitle}>
-                    {online ? 'ONLINE' : 'OFFLINE'} status
+                    <Text style={styles.onlineTitleUpper}>
+                      {online ? 'ONLINE ' : 'OFFLINE '}
+                    </Text>
+                    <Text style={styles.onlineTitleRest}>Status</Text>
                   </Text>
                 </View>
                 <Text style={styles.onlineHint}>
                   {online
-                    ? "You're online — searching for jobs"
+                    ? 'You are ready to receive leads'
                     : 'Turn on to start receiving jobs'}
                 </Text>
               </View>
@@ -342,29 +256,182 @@ export const HomeScreen: FC = () => {
             </View>
           </View>
         </View>
+
+        <View style={styles.tasksSection}>
+          <View style={styles.tasksHeader}>
+            <Text style={styles.tasksTitle}>Current Tasks</Text>
+            <Pressable
+              hitSlop={8}
+              onPress={() => navigation.navigate('EarningsOverview')}
+              accessibilityRole="link"
+              accessibilityLabel="View history"
+            >
+              <Text style={styles.viewHistory}>View History</Text>
+            </Pressable>
+          </View>
+
+          <Pressable
+            style={styles.perfStripe}
+            onPress={() => navigation.navigate('PerformanceOverview')}
+            accessibilityRole="button"
+            accessibilityLabel="Open performance overview"
+          >
+            <View style={styles.perfStripeMid}>
+              <Text style={styles.perfStripeLabel}>Performance score</Text>
+              <Text style={styles.perfStripeSub}>
+                {TECHNICIAN_PROFILE.perfScore}/100 · Grade{' '}
+                {TECHNICIAN_PROFILE.grade}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={MUTED} />
+          </Pressable>
+
+          <View style={styles.taskCard}>
+            <Text style={styles.orderId}>Job#FJ-8921</Text>
+            <View style={styles.taskBody}>
+              <View style={styles.timelineBlock}>
+                <View style={styles.timelineIcons}>
+                  <Ionicons name="location-sharp" size={22} color={TOGGLE_ON} />
+                  <TimelineRail height={36} />
+                  <Ionicons name="location-sharp" size={22} color={RED} />
+                </View>
+                <View style={styles.timelineCopy}>
+                  <View>
+                    <Text style={styles.phaseLabel}>ON SITE</Text>
+                    <Text style={styles.phaseAddr}>
+                      Fan repair,{'\n'}Andheri West
+                    </Text>
+                  </View>
+                  <View>
+                    <Text style={styles.phaseLabel}>MATERIAL RUN</Text>
+                    <Text style={styles.phaseAddr}>
+                      Parts pickup · Goregaon
+                    </Text>
+                  </View>
+                </View>
+              </View>
+              <View style={styles.timePillWrap}>
+                <View style={styles.timePill}>
+                  <Text style={styles.timePillText}>10:45</Text>
+                </View>
+              </View>
+            </View>
+            <Text style={styles.price}>₹850</Text>
+
+            <View style={styles.metricsBlock}>
+              <View style={styles.hairline} />
+              <View style={styles.metricsRow}>
+                <View style={styles.metricItem}>
+                  <Ionicons name="location-outline" size={22} color={MUTED} />
+                  <Text style={styles.metricText}>8.2 km</Text>
+                </View>
+                <View style={styles.metricItem}>
+                  <Ionicons name="time-outline" size={22} color={MUTED} />
+                  <Text style={styles.metricText}>22 mins</Text>
+                </View>
+              </View>
+              <View style={styles.hairline} />
+            </View>
+
+            <View style={styles.taskActions}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="View active job"
+                style={({ pressed }) => [
+                  styles.btnOutline,
+                  pressed && styles.pressedOpacity,
+                ]}
+                onPress={() =>
+                  navigation
+                    .getParent()
+                    ?.navigate('JobsTab', { screen: 'JobInProgress' })
+                }
+              >
+                <Text style={styles.btnOutlineLabel}>View Task</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Start navigation"
+                style={({ pressed }) => [
+                  styles.btnPrimary,
+                  pressed && styles.pressedOpacity,
+                ]}
+                onPress={() =>
+                  navigation.getParent()?.navigate('JobsTab', {
+                    screen: 'EnRoute',
+                  })
+                }
+              >
+                <Text style={styles.btnPrimaryLabel}>Start Navigation</Text>
+                <Ionicons name="navigate" size={22} color="#FFFFFF" />
+              </Pressable>
+            </View>
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.quickRow}
+          >
+            {quickActions.map((q) => (
+              <Pressable
+                key={q.id}
+                style={({ pressed }) => [
+                  styles.quickChip,
+                  pressed && styles.quickChipPressed,
+                ]}
+                onPress={q.onPress}
+                accessibilityRole="button"
+                accessibilityLabel={q.label}
+              >
+                <Ionicons name={q.icon} size={16} color={RED} />
+                <Text style={styles.quickChipTxt}>{q.label}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+          <View style={styles.warnCard}>
+            <Ionicons name="alert-circle-outline" size={18} color="#b45309" />
+            <Text style={styles.warnTxt}>
+              Police verification expires in 12 days
+            </Text>
+            <Pressable
+              onPress={() =>
+                navigation.getParent()?.navigate('ProfileTab', {
+                  screen: 'Documents',
+                })
+              }
+              hitSlop={8}
+              accessibilityRole="link"
+              accessibilityLabel="Renew documents"
+            >
+              <Text style={styles.warnAction}>Renew</Text>
+            </Pressable>
+          </View>
+        </View>
       </ScrollView>
 
       <Modal transparent visible={confirmOn} animationType="fade">
-        <View style={styles.confirmBackdrop}>
-          <View style={[styles.confirmSheet, shadows.lg]}>
-            <View style={styles.confirmIcon}>
-              <Ionicons name="flash" size={22} color={colors.primary} />
+        <View style={confirmStyles.confirmBackdrop}>
+          <View style={confirmStyles.confirmSheet}>
+            <View style={confirmStyles.confirmIcon}>
+              <Ionicons name="flash" size={22} color={RED} />
             </View>
-            <Text style={styles.confirmTitle}>Go online?</Text>
-            <Text style={styles.confirmBody}>
+            <Text style={confirmStyles.confirmTitle}>Go online?</Text>
+            <Text style={confirmStyles.confirmBody}>
               Start receiving job leads near you. You can pause anytime.
             </Text>
-            <View style={styles.confirmRow}>
+            <View style={confirmStyles.confirmRow}>
               <AppButton
                 label="Cancel"
                 variant="outline"
                 onPress={() => setConfirmOn(false)}
-                style={styles.flex}
+                style={confirmStyles.flex}
               />
               <AppButton
                 label="Yes, go online"
                 onPress={confirmGoOnline}
-                style={styles.flex}
+                style={confirmStyles.flex}
               />
             </View>
           </View>
@@ -387,337 +454,483 @@ export const HomeScreen: FC = () => {
   );
 };
 
-const SnapStat: FC<{ label: string; value: string }> = ({ label, value }) => (
-  <View style={styles.snapStat}>
-    <Text style={styles.snapMuted}>{label}</Text>
-    <Text style={styles.snapVal}>{value}</Text>
-  </View>
-);
+const confirmStyles = StyleSheet.create({
+  confirmBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(17,24,39,0.45)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  confirmSheet: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 20,
+    gap: 8,
+    alignItems: 'flex-start',
+  },
+  confirmIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: 'rgba(217,35,45,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmTitle: {
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 18,
+    color: TEXT,
+  },
+  confirmBody: {
+    fontFamily: 'PublicSans_400Regular',
+    fontSize: 13.5,
+    color: MUTED,
+  },
+  confirmRow: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+    marginTop: 8,
+  },
+  flex: { flex: 1 },
+});
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.pageBg },
+  root: {
+    flex: 1,
+    backgroundColor: PAGE_BG,
+  },
   scroll: { flex: 1 },
-  scrollContent: { paddingBottom: spacing.lg },
+  scrollContent: {
+    paddingBottom: 24,
+  },
   heroRed: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
-    borderBottomLeftRadius: radii.hero,
-    borderBottomRightRadius: radii.hero,
+    backgroundColor: RED,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
     overflow: 'hidden',
+    width: '100%',
+    maxWidth: DESIGN_W,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 7 },
+    shadowOpacity: 0.14,
+    shadowRadius: 13,
+    elevation: 8,
   },
   heroRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: spacing.lg,
+    marginBottom: 16,
   },
   greeting: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(20),
-    color: colors.white,
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 20 * SCALE,
+    color: '#FFFFFF',
   },
   subGreeting: {
-    marginTop: 4,
-    fontFamily: fonts.publicMedium,
-    fontSize: scaleFont(13),
-    color: 'rgba(255,255,255,0.85)',
+    marginTop: 5,
+    fontFamily: 'PublicSans_500Medium',
+    fontSize: 14 * SCALE,
+    color: '#e2e2e2',
   },
   notifBtn: {
-    width: 46,
-    height: 46,
-    borderRadius: radii.md,
-    backgroundColor: colors.primaryMuted,
+    width: 50,
+    height: 50,
+    borderRadius: 15,
+    backgroundColor: NOTIF_BG,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
   notifDot: {
     position: 'absolute',
-    top: 11,
-    right: 11,
+    top: 10,
+    right: 10,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.successBright,
+    backgroundColor: '#4ade80',
     borderWidth: 1.5,
-    borderColor: colors.primary,
+    borderColor: NOTIF_BG,
   },
-  heroPanel: { gap: spacing.md },
-  snapshotCard: {
-    backgroundColor: 'rgba(0,0,0,0.18)',
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+  heroPanel: {
+    gap: 16,
   },
-  snapHeaderRow: {
+  statRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 16,
   },
-  snapTitle: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(15),
-    color: colors.white,
-  },
-  surgeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: radii.pill,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-  },
-  surgeTxt: {
-    fontFamily: fonts.publicSemiBold,
-    fontSize: scaleFont(10.5),
-    color: colors.white,
-    letterSpacing: 0.3,
-  },
-  snapRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.xs,
-  },
-  snapStat: { flex: 1 },
-  divider: {
-    width: 1,
-    alignSelf: 'stretch',
-    backgroundColor: 'rgba(255,255,255,0.18)',
-  },
-  snapMuted: {
-    fontFamily: fonts.publicMedium,
-    fontSize: scaleFont(11),
-    color: 'rgba(255,255,255,0.78)',
-    letterSpacing: 0.2,
-  },
-  snapVal: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(18),
-    color: colors.white,
-    marginTop: 2,
-  },
-  snapLinkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: spacing.xs,
-  },
-  snapLink: {
-    fontFamily: fonts.publicSemiBold,
-    fontSize: scaleFont(12.5),
-    color: colors.white,
-  },
-  perfCard: {
-    backgroundColor: colors.white,
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-    gap: spacing.xs,
-    ...shadows.sm,
-  },
-  perfHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  perfTitle: {
-    fontFamily: fonts.publicSemiBold,
-    fontSize: scaleFont(13),
-    color: colors.muted,
-    letterSpacing: 0.2,
-  },
-  perfChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    backgroundColor: colors.successSoft,
-    borderRadius: radii.pill,
-  },
-  perfChipTxt: {
-    fontFamily: fonts.publicSemiBold,
-    fontSize: scaleFont(10.5),
-    color: colors.success,
-  },
-  perfBig: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(34),
-    color: colors.text,
-    marginTop: 2,
-  },
-  perfMax: {
-    fontFamily: fonts.publicSemiBold,
-    fontSize: scaleFont(16),
-    color: colors.muted,
-  },
-  perfGrade: {
-    fontFamily: fonts.publicMedium,
-    fontSize: scaleFont(12.5),
-    color: colors.muted,
-  },
-  cardLite: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.white,
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-    ...shadows.sm,
-  },
-  cardIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.md,
-    backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardIconWarn: {
-    backgroundColor: colors.warningSoft,
-  },
-  cardCol: { flex: 1, gap: 2 },
-  cardTitle: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(14),
-    color: colors.text,
-  },
-  cardBody: {
-    fontFamily: fonts.publicRegular,
-    fontSize: scaleFont(12.5),
-    color: colors.muted,
-  },
-  quickRow: {
-    paddingVertical: spacing.xs,
-    gap: spacing.sm,
-  },
-  quickChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.white,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: radii.pill,
-    ...shadows.sm,
-  },
-  quickChipTxt: {
-    fontFamily: fonts.publicSemiBold,
-    fontSize: scaleFont(13),
-    color: colors.text,
-  },
-  warnCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: '#fff7ed',
-    borderRadius: radii.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: '#fed7aa',
-  },
-  warnTxt: {
+  statCardPress: {
     flex: 1,
-    fontFamily: fonts.publicMedium,
-    fontSize: scaleFont(12.5),
-    color: colors.warningInk,
+    minWidth: 0,
+    maxWidth: (CONTENT_MAX - 16) / 2,
   },
-  warnAction: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(13),
-    color: colors.primary,
+  statCard: {
+    flex: 1,
+    minWidth: 0,
+    borderRadius: 16,
+    padding: 16,
+    gap: 8,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        backgroundColor: 'rgba(0,0,0,0.2)',
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10.4,
+      },
+      android: {
+        backgroundColor: STAT_CARD_ANDROID_BG,
+        elevation: 0,
+      },
+      default: {
+        backgroundColor: 'rgba(0,0,0,0.2)',
+      },
+    }),
+  },
+  statLabel: {
+    fontFamily: 'PublicSans_600SemiBold',
+    fontSize: 16 * SCALE,
+    color: '#FFFFFF',
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
+  },
+  statValue: {
+    fontFamily: 'PublicSans_600SemiBold',
+    fontSize: 24 * SCALE,
+    color: '#FFFFFF',
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
   onlineBar: {
-    backgroundColor: 'rgba(0,0,0,0.22)',
-    borderRadius: radii.lg,
-    padding: spacing.lg,
+    backgroundColor: STATUS_BAR_BG,
+    borderRadius: 16,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 15,
+    elevation: 4,
   },
-  onlineLeft: { flex: 1, gap: 4 },
-  onlineTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  onlineLeft: {
+    flex: 1,
+    gap: 4,
+  },
+  onlineTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   onlineDot: {
     width: 11,
     height: 11,
     borderRadius: 6,
-    backgroundColor: colors.successBright,
+    backgroundColor: '#4ade80',
   },
-  dotOff: { backgroundColor: '#9ca3af' },
+  onlineDotOff: {
+    backgroundColor: '#9ca3af',
+  },
   onlineTitle: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(15),
-    color: colors.white,
-    letterSpacing: 0.3,
+    flexShrink: 1,
+  },
+  onlineTitleUpper: {
+    textTransform: 'uppercase',
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 20 * SCALE,
+    color: '#FFFFFF',
+  },
+  onlineTitleRest: {
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 20 * SCALE,
+    color: '#FFFFFF',
+    textTransform: 'none',
   },
   onlineHint: {
-    fontFamily: fonts.publicMedium,
-    fontSize: scaleFont(12.5),
-    color: 'rgba(255,255,255,0.82)',
+    fontFamily: 'PublicSans_500Medium',
+    fontSize: 14 * SCALE,
+    color: '#d3d3d3',
   },
   toggleTrack: {
     width: 53,
     height: 28,
-    borderRadius: radii.pill,
+    borderRadius: 119,
     padding: 2,
     justifyContent: 'center',
   },
   toggleTrackOn: {
-    backgroundColor: colors.success,
+    backgroundColor: TOGGLE_ON,
+    borderWidth: 0.5,
+    borderColor: 'rgba(34,153,121,0.15)',
     alignItems: 'flex-end',
   },
   toggleTrackOff: {
     backgroundColor: '#6b7280',
+    borderWidth: 0.5,
+    borderColor: 'rgba(0,0,0,0.1)',
     alignItems: 'flex-start',
   },
   toggleKnob: {
     width: 25,
     height: 25,
     borderRadius: 13,
-    backgroundColor: colors.white,
+    backgroundColor: '#FFFFFF',
   },
-  pressedOpacity: { opacity: 0.92 },
-  pressedScale: { opacity: 0.96, transform: [{ scale: 0.98 }] },
-  confirmBackdrop: {
+  tasksSection: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+    width: '100%',
+    maxWidth: DESIGN_W,
+    alignSelf: 'center',
+    gap: 16,
+  },
+  tasksHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  tasksTitle: {
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 20 * SCALE,
+    color: TEXT,
+  },
+  viewHistory: {
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 16 * SCALE,
+    color: RED,
+  },
+  perfStripe: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  perfStripeMid: {
     flex: 1,
-    backgroundColor: colors.overlay,
-    justifyContent: 'center',
-    padding: spacing.lg,
+    gap: 2,
   },
-  confirmSheet: {
-    backgroundColor: colors.white,
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-    gap: spacing.sm,
+  perfStripeLabel: {
+    fontFamily: 'PublicSans_600SemiBold',
+    fontSize: 13 * SCALE,
+    color: MUTED,
+    letterSpacing: 0.2,
+  },
+  perfStripeSub: {
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 15 * SCALE,
+    color: TEXT,
+  },
+  taskCard: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: '#d8d9dd',
+    borderStyle: 'dashed',
+    borderRadius: 32,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    gap: 24,
+    width: '100%',
+    maxWidth: CONTENT_MAX,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.07,
+    shadowRadius: 9,
+    elevation: 3,
+  },
+  orderId: {
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 16 * SCALE,
+    color: MUTED,
+    letterSpacing: 0.64,
+  },
+  taskBody: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
-  confirmIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: radii.md,
-    backgroundColor: colors.primarySoft,
+  timelineBlock: {
+    flexDirection: 'row',
+    gap: 12,
+    flex: 1,
+  },
+  timelineIcons: {
+    alignItems: 'center',
+    paddingTop: 2,
+  },
+  railWrap: {
+    height: 44,
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  railSvg: {
+    marginVertical: -2,
+  },
+  timelineCopy: {
+    flex: 1,
+    gap: 30,
+    maxWidth: 200,
+  },
+  phaseLabel: {
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 16 * SCALE,
+    color: MUTED,
+    letterSpacing: 0.64,
+    marginBottom: 4,
+  },
+  phaseAddr: {
+    fontFamily: 'PublicSans_600SemiBold',
+    fontSize: 16 * SCALE,
+    color: TEXT,
+    lineHeight: 22,
+  },
+  timePillWrap: {
+    justifyContent: 'flex-start',
+    paddingLeft: 8,
+  },
+  timePill: {
+    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: 'rgba(211,211,211,0.28)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 39,
+  },
+  timePillText: {
+    fontFamily: 'PublicSans_600SemiBold',
+    fontSize: 16 * SCALE,
+    color: '#000000',
+    letterSpacing: 1.28,
+  },
+  price: {
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 24 * SCALE,
+    color: TEXT,
+  },
+  metricsBlock: {
+    gap: 12,
+  },
+  hairline: {
+    height: 1,
+    backgroundColor: '#e5e5ea',
+    width: '100%',
+  },
+  metricsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 32,
+    flexWrap: 'wrap',
+  },
+  metricItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  metricText: {
+    fontFamily: 'PublicSans_600SemiBold',
+    fontSize: 16 * SCALE,
+    color: MUTED,
+  },
+  taskActions: {
+    flexDirection: 'row',
+    gap: 16,
+    flexWrap: 'wrap',
+    alignItems: 'stretch',
+  },
+  btnOutline: {
+    borderWidth: 1,
+    borderColor: '#cecece',
+    borderRadius: 83,
+    paddingHorizontal: 24,
+    minHeight: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  btnOutlineLabel: {
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 16 * SCALE,
+    color: TEXT,
+    letterSpacing: 0.192,
+  },
+  btnPrimary: {
+    flex: 1,
+    minWidth: 160,
+    backgroundColor: RED,
+    borderRadius: 74,
+    paddingHorizontal: 28,
+    minHeight: 48,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
-  confirmTitle: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(18),
-    color: colors.text,
+  btnPrimaryLabel: {
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 16 * SCALE,
+    color: '#FFFFFF',
+    letterSpacing: 0.192,
   },
-  confirmBody: {
-    fontFamily: fonts.publicRegular,
-    fontSize: scaleFont(13.5),
-    color: colors.muted,
+  quickRow: {
+    gap: 12,
+    paddingVertical: 4,
+    paddingRight: 4,
   },
-  confirmRow: {
+  quickChip: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    width: '100%',
-    marginTop: spacing.sm,
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+    marginRight: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  flex: { flex: 1 },
+  quickChipPressed: { opacity: 0.92 },
+  quickChipTxt: {
+    fontFamily: 'PublicSans_600SemiBold',
+    fontSize: 13 * SCALE,
+    color: TEXT,
+  },
+  warnCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#fff7ed',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#fed7aa',
+  },
+  warnTxt: {
+    flex: 1,
+    fontFamily: 'PublicSans_500Medium',
+    fontSize: 12.5 * SCALE,
+    color: '#b45309',
+  },
+  warnAction: {
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 13 * SCALE,
+    color: RED,
+  },
+  pressedOpacity: {
+    opacity: 0.92,
+  },
 });

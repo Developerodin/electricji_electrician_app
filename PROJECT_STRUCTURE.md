@@ -1,107 +1,227 @@
-# ElectricJi Delivery App — project structure
+# ElectricJi Electrician App — project structure
 
-Quick reference for humans and for Cursor when editing this repo.  
-**Stack:** Expo SDK ~54, React Native, TypeScript.
+Quick reference for humans and Cursor when editing this package.  
+**Product spec / screen copy:** see **`Electrician-app.md`** (prototype flow).  
+**Stack:** Expo SDK ~54, React Native, TypeScript, **React Navigation** (native stack + bottom tabs).
+
+**Folder:** `electricji_electrician_app/` — note `package.json` / `app.json` still use the name `electicji_delivery_app` until renamed intentionally.
+
+---
 
 ## Directory layout
 
 ```text
-electicji_delivery_app/
-├── index.ts                 # Expo entry: registers root component
-├── app.json                 # Expo config (name, icons, splash, plugins)
+electricji_electrician_app/
+├── index.ts                      # Expo entry: registerRootComponent → ./src/App
+├── app.json
 ├── package.json
 ├── tsconfig.json
-├── PROJECT_STRUCTURE.md     # This file
-├── assets/                  # Static images (Metro `require` paths)
-│   ├── account/               # Account tab: profile avatar (Figma #4089:1909)
-│   ├── application-status/
-│   ├── forgot-password/
-│   ├── kyc/
-│   ├── login/
-│   ├── order-task/          # Task View: vendor avatar, map preview
-│   ├── vehicle-details/    # RC preview placeholder (Figma #4260:3175)
-│   ├── personal-info/
-│   └── … (flat PNGs at assets root as needed)
+├── PROJECT_STRUCTURE.md          # This file
+├── PROJECT_OVERVIEW.md           # Legacy notes (may predate React Navigation — prefer this file + code)
+├── Electrician-app.md            # UX / flow prototype spec
+├── scripts/
+│   └── rasterize-svg-masked-pngs.mjs   # npm run assets:rasterize-figma-svgs
+├── assets/                       # Expo paths in app.json (./assets/…); Metro from screens via ../../assets/
 └── src/
-    ├── App.tsx              # Fonts, loading, route state, screen switcher
-    ├── hooks/               # Lightweight screen hooks
-    │   └── useLoginScreenChrome.ts  # Safe-area top + keyboard visibility (auth screens)
-    ├── components/         # Shared UI (not route roots)
-    │   ├── MainTabBar.tsx    # Bottom nav: Home, Tasks, Earnings, Account (Ionicons)
-    │   └── MainTabShell.tsx # Wraps main-tab screens + inset for tab bar
-    └── screens/             # One file per full-screen UI
-        ├── AccountScreen.tsx               # Figma Account #4089:1909 (main tab)
-        ├── ApplicationStatusApprovedScreen.tsx
-        ├── ApplicationStatusUnderReviewScreen.tsx
-        ├── EnterNewPasswordScreen.tsx
-        ├── EnterOtpScreen.tsx
-        ├── ForgotPasswordScreen.tsx
-        ├── HomeScreen.tsx
-        ├── KycVerificationScreen.tsx
-        ├── LoginEmailScreen.tsx
-        ├── LoginSignupScreen.tsx
-        ├── EarningsScreen.tsx            # Figma Earnings #4089:1740
-        ├── MainTabPlaceholderScreen.tsx  # Not wired; kept for dev scaffolding
-        ├── TasksScreen.tsx               # Figma Tasks #4089:1844
-        ├── OrderTaskViewScreen.tsx   # Figma Task View #4089:1638
-        ├── PasswordResetSuccessScreen.tsx
-        ├── PersonalInfoScreen.tsx
-        ├── SplashScreen.tsx          # Shown once after fonts load (see `App.tsx`)
-        └── VehicleDetailsScreen.tsx  # Figma Vehicle Details #4089:1538
+    ├── App.tsx                   # Fonts (expo-font loadAsync), GestureHandlerRootView, SafeAreaProvider, NavigationContainer, RootNavigator
+    ├── navigation/
+    │   ├── types.ts              # RootStackParamList, MainTabParamList, per-tab stack param lists
+    │   ├── RootNavigator.tsx   # Splash → onboarding/KYC → MainTabs
+    │   ├── MainTabs.tsx        # Bottom tabs: Home | Jobs | Wholesale | Learn | Profile
+    │   ├── HomeStack.tsx
+    │   ├── JobsStack.tsx
+    │   ├── WholesaleStack.tsx
+    │   ├── LearnStack.tsx
+    │   └── ProfileStack.tsx
+    ├── theme/                    # Design tokens: colors, fonts, spacing, shadows, layout, typography
+    ├── components/
+    │   ├── ui/                     # Shared primitives (Button, ScreenScaffold, FormField, …)
+    │   ├── KycStepChrome.tsx
+    │   ├── FloatingSosButton.tsx
+    │   ├── IncomingJobLeadModal.tsx
+    │   ├── MainTabBar.tsx        # Legacy hand-rolled tab bar (not wired — live tabs use MainTabs.tsx)
+    │   └── MainTabShell.tsx      # Legacy shell (not wired)
+    └── screens/                  # One module per screen; wired from navigators (see tables below)
 ```
-
-## Entry and navigation
-
-| Piece | Role |
-|--------|------|
-| `index.ts` | `registerRootComponent` → imports `./src/App`. |
-| `src/App.tsx` | Loads Rubik + Public Sans via `expo-font`, shows branded `SplashScreen` briefly, then renders **one** screen based on local React state (`AuthRoute` union type). |
-
-Navigation is **not** React Navigation yet: it is conditional rendering and callbacks like `onBack`, `onNext`, `setRoute(...)`.
-
-### Main app tabs (post-onboarding)
-
-- **Routes:** `home`, `tasks`, `earnings`, `account` — rendered inside `MainTabShell`, which mounts **`MainTabBar`** once at the bottom.
-- **Rule:** Implement tab **content only** inside `screens/*` for these routes; **do not** add a second bottom tab bar inside those screens — Figma “nav bar” for this shell is satisfied by `MainTabBar` / `MainTabShell` only.
-- **Detail routes** (e.g. `order-task`) sit **outside** the shell: full screen, no tab bar, until you explicitly add a different pattern.
-- **Types:** `MainTabRoute`, `MAIN_TAB_CONTENT_BOTTOM_PADDING`, and **`useMainTabContentBottomPadding()`** (adds Android bottom inset for 3-button / gesture nav) live in `src/components/MainTabBar.tsx`. Use the hook for any tab-screen `ScrollView` bottom padding (see `MainTabShell`, `AccountScreen`).
-
-### Auth / onboarding flow (conceptual order)
-
-1. `login-signup` → `login-email` / `personal-info` (OTP path) / forgot-password  
-2. Forgot branch: `forgot-password` → `enter-otp` → `enter-new-password` → `password-reset-success` → back to login  
-3. Profile branch: `personal-info` → `kyc-verification` → `vehicle-details` → `application-under-review` → (`application-approved` in `__DEV__` only) → **`home`** (“Go to Dashboard”). Main tabs: `home` | `tasks` | `earnings` | `account` (`tasks` → `TasksScreen` Figma #4089:1844; `earnings` → `EarningsScreen` #4089:1740; `account` → `AccountScreen` #4089:1909). From **`home`**, **View Task** opens `order-task` (Figma Task View #4089:1638); back returns to `home`. From **`tasks`**, **Continue** on the current task opens `order-task`; back returns to `tasks`.
-
-When adding a step, extend `AuthRoute` in `src/App.tsx` and add a matching `{route === '…' && <Screen … />}` block with the same callback patterns as neighboring screens. New **main-tab** screens belong inside `MainTabShell` (only one `MainTabBar` in the app).
-
-### Status bar
-
-- `expo-status-bar` in `App.tsx` uses **`light`** when `route === 'home'` (red hero header) and **`dark`** for other routes (including other main tabs with light grey background, `order-task`, etc.).
-
-## Assets
-
-- **Physical location:** project root `assets/` (sibling of `src/`), not inside `src/screens/`.
-- **From a screen in `src/screens/*.tsx`:** Metro resolves `require()` relative to that file. Use:
-
-  `require('../../assets/…')`
-
-  (two levels up from `screens/` to the app root, then into `assets/`.)
-
-- **`app.json` / Expo:** paths like `./assets/icon.png` are relative to the **app project root** (`electicji_delivery_app/`), not `src/`.
-
-## Conventions for changes
-
-- **New screen:** add `src/screens/<Name>Screen.tsx`, export a named component, then import and mount it from `src/App.tsx` with the right `AuthRoute` and props.
-- **Shared UI:** `src/components/` — use for cross-screen pieces (tab bar shell, reusable controls). Prefer extending `MainTabShell`/`MainTabBar` for new primary tabs rather than embedding nav in screens.
-- **Typo in folder name:** the app directory is `electicji_delivery_app` (matches `package.json`); keep imports and docs consistent with that spelling until a rename is intentional.
-
-## Search hints (for agents)
-
-- **“Where is navigation?”** → `src/App.tsx` (`route`, `setRoute`, screen tree).
-- **“Where is the driver tab bar?”** → `src/components/MainTabBar.tsx` + `MainTabShell.tsx` — do not duplicate nav bars inside tab screens.
-- **“Where is screen X?”** → `src/screens/` file name matches export.
-- **“Why won’t my image load?”** → Check `require` path from `src/screens/` → must reach `../../assets/…` unless you colocate assets (not current layout). If Figma MCP gave SVG content in a `.png` file, run `npm run assets:rasterize-figma-svgs` (uses **density 720** so icons stay sharp on 3× screens).
 
 ---
 
-*Update this file when you introduce new top-level folders, routing libraries, or entry-point changes.*
+## Entry and boot
+
+| Piece | Role |
+|--------|------|
+| `index.ts` | Imports `./src/App`, `registerRootComponent(App)`. Also imports `react-native-gesture-handler` first. |
+| `src/App.tsx` | Loads Rubik + Public Sans; red loader until fonts ready; then **`NavigationContainer`** + **`RootNavigator`**. Default **`StatusBar`** style **`dark`** after fonts load. |
+
+**Splash:** `RootNavigator` mounts `SplashScreen` ~2200 ms then **`navigation.replace('LanguageSelection')`** (see `SplashRoute` in `RootNavigator.tsx`).
+
+---
+
+## Navigation model
+
+Routing is **React Navigation**, not `useState` route strings in `App.tsx`.
+
+- **Types:** `src/navigation/types.ts` — extend param lists when adding routes with params.
+- **Root stack:** `RootNavigator.tsx` — auth/onboarding/KYC linear chain, then **`MainTabs`**.
+- **Main app:** `MainTabs.tsx` — **`createBottomTabNavigator`** with five tabs; each tab is a **`createNativeStackNavigator`** stack (`*Stack.tsx`).
+
+### Bottom tabs (`MainTabParamList`)
+
+| Tab navigator screen | Label | Stack module | Primary screens |
+|---------------------|-------|--------------|-----------------|
+| `HomeTab` | Home | `HomeStack.tsx` | Dashboard, earnings, wallet, notifications, safety, inspections |
+| `JobsTab` | Jobs | `JobsStack.tsx` | Lead inbox → job lifecycle → SOS modal |
+| `WholesaleTab` | Wholesale | `WholesaleStack.tsx` | Marketplace, cart, checkout, orders |
+| `LearnTab` | Learn | `LearnStack.tsx` | Courses, lessons, quiz, badges |
+| `ProfileTab` | Profile | `ProfileStack.tsx` | Profile menu, settings, support, tickets |
+
+**Rule:** Do **not** add a second bottom tab bar inside tab roots — Figma-style chrome for primary nav is **`MainTabs`** only. Push secondary flows onto the **same tab’s stack** (or add stack screens).
+
+### Root stack flow (conceptual, matches `Electrician-app.md`)
+
+`Splash` → `LanguageSelection` → `PhoneEntry` → `EnterOtp` → `Permissions` → `OnboardingIntro` → **KYC** (`KycPersonal` … `KycBankUpi`) → `KycStatus` → **`MainTabs`**. (`WelcomeCarouselScreen.tsx` remains in repo as reference only — not wired in `RootNavigator`.)
+
+Root screen names → typical TSX files:
+
+| Route name | Screen file |
+|------------|-------------|
+| `Splash` | `SplashScreen.tsx` |
+| `LanguageSelection` | `LanguageSelectionScreen.tsx` |
+| `PhoneEntry` | `PhoneEntryScreen.tsx` |
+| `EnterOtp` | `EnterOtpScreen.tsx` |
+| `Permissions` | `PermissionsScreen.tsx` |
+| `OnboardingIntro` | `OnboardingIntroScreen.tsx` |
+| `KycPersonal` | `PersonalInfoScreen.tsx` |
+| `KycSelfie` … `KycBankUpi`, `KycStatus` | `Kyc*.tsx` |
+
+### Home stack (`HomeStackParamList`)
+
+| Route | Component |
+|-------|-----------|
+| `HomeMain` | `HomeScreen.tsx` |
+| `EarningsOverview` | `EarningsScreen.tsx` |
+| `JobEarningDetail` | `JobEarningDetailScreen.tsx` |
+| `Payouts` | `PayoutsScreen.tsx` |
+| `TaxDocuments` | `TaxDocumentsScreen.tsx` |
+| `WalletHome` | `WalletHomeScreen.tsx` |
+| `BankUpiManager` | `BankUpiManagerScreen.tsx` |
+| `WithdrawalHistory` | `WithdrawalHistoryScreen.tsx` |
+| `PerformanceOverview` | `PerformanceOverviewScreen.tsx` |
+| `NotificationsCenter` | `NotificationsCenterScreen.tsx` |
+| `SafetyToolHome` | `SafetyToolHomeScreen.tsx` |
+| `InspectionChecklist` | `InspectionChecklistScreen.tsx` |
+| `ScoreRecommendations` | `ScoreRecommendationsScreen.tsx` |
+| `ReportPreviewSend` | `ReportPreviewSendScreen.tsx` |
+| `InspectionHistory` | `InspectionHistoryScreen.tsx` |
+
+### Jobs stack (`JobsStackParamList`)
+
+| Route | Component |
+|-------|-----------|
+| `JobLeadInbox` | `JobLeadInboxScreen.tsx` |
+| `LeadAccepted` | `LeadAcceptedScreen.tsx` |
+| `EnRoute` | `EnRouteScreen.tsx` |
+| `ArrivalConfirmation` | `ArrivalConfirmationScreen.tsx` |
+| `StartOtp` | `JobStartOtpScreen.tsx` |
+| `JobInProgress` | `JobInProgressScreen.tsx` |
+| `MarkComplete` | `MarkCompleteScreen.tsx` |
+| `FinalInvoice` | `FinalInvoiceScreen.tsx` |
+| `EndOtp` | `JobEndOtpScreen.tsx` |
+| `UploadProof` | `UploadProofScreen.tsx` |
+| `JobSummary` | `JobSummaryScreen.tsx` |
+| `SosModal` | `SosModalScreen.tsx` (modal presentation) |
+
+### Wholesale stack (`WholesaleStackParamList`)
+
+| Route | Component |
+|-------|-----------|
+| `MarketplaceHome` | `MarketplaceHomeScreen.tsx` |
+| `CategoryListing` | `CategoryListingScreen.tsx` |
+| `SearchFilter` | `SearchFilterScreen.tsx` |
+| `ProductDetail` | `ProductDetailScreen.tsx` |
+| `Cart` | `CartScreen.tsx` |
+| `Checkout` | `CheckoutScreen.tsx` |
+| `OrderConfirmation` | `OrderConfirmationScreen.tsx` |
+| `OrderTracking` | `OrderTrackingScreen.tsx` |
+| `OrderHistory` | `OrderHistoryScreen.tsx` |
+| `ReturnsRefund` | `ReturnsRefundScreen.tsx` |
+
+### Learn stack (`LearnStackParamList`)
+
+| Route | Component |
+|-------|-----------|
+| `CourseCatalog` | `CourseCatalogScreen.tsx` |
+| `CourseDetail` | `CourseDetailScreen.tsx` |
+| `LessonPlayer` | `LessonPlayerScreen.tsx` |
+| `Quiz` | `QuizScreen.tsx` |
+| `MyBadges` | `MyBadgesScreen.tsx` |
+
+### Profile stack (`ProfileStackParamList`)
+
+| Route | Component |
+|-------|-----------|
+| `ProfileMenu` | `ProfileMenuScreen.tsx` |
+| `PersonalInformation` | `PersonalInformationScreen.tsx` |
+| `Documents` | `DocumentsScreen.tsx` |
+| `ServiceAreaEdit` | `ServiceAreaEditScreen.tsx` |
+| `SpecializationsEdit` | `SpecializationsEditScreen.tsx` |
+| `AvailabilitySchedule` | `AvailabilityScheduleScreen.tsx` |
+| `Languages` | `LanguagesScreen.tsx` |
+| `BioAbout` | `BioAboutScreen.tsx` |
+| `PublicProfilePreview` | `PublicProfilePreviewScreen.tsx` |
+| `ReferEarn` | `ReferEarnScreen.tsx` |
+| `SupportHome` | `SupportHomeScreen.tsx` |
+| `FaqList` | `FaqListScreen.tsx` |
+| `RaiseTicket` | `RaiseTicketScreen.tsx` |
+| `MyTickets` | `MyTicketsScreen.tsx` |
+| `TicketChat` | `TicketChatScreen.tsx` |
+| `Settings` | `SettingsScreen.tsx` |
+| `DeleteAccount` | `DeleteAccountScreen.tsx` |
+
+### Non-screen asset helper
+
+| File | Role |
+|------|------|
+| `src/screens/splashVectorXml.ts` | Splash vector data (not a route) |
+
+---
+
+## Theme and shared UI
+
+- **`src/theme/`** — prefer **`colors`**, **`fonts`**, **`spacing`**, **`shadows`** from `theme/index.ts` for new UI.
+- **`src/components/ui/`** — reusable controls; export barrel `components/ui/index.ts` where applicable.
+- **`KycStepChrome.tsx`** — shared chrome for KYC steps (aligned with **Electrician-app.md** “Step X of 10” pattern).
+
+---
+
+## Assets
+
+- **Expo:** `app.json` references `./assets/icon.png`, splash, adaptive icon, favicon — paths are relative to **`electricji_electrician_app/`**.
+- **Metro `require` from `src/screens/`:** use **`require('../../assets/…')`** (two levels up to package root).
+
+If Figma exports SVG-masked PNGs that look soft, run **`npm run assets:rasterize-figma-svgs`** (density **720** in script).
+
+---
+
+## Conventions for changes
+
+1. **New screen:** add `src/screens/<Name>Screen.tsx`, register it on the correct **`Stack.Screen`** in the right **`*Stack.tsx`** (or **`RootNavigator`** for pre-login steps).
+2. **Params:** extend **`src/navigation/types.ts`** (`HomeStackParamList`, etc.).
+3. **Shared UI:** add to **`src/components/ui/`** if primitive; feature-specific pieces can live under **`src/components/`**.
+4. **Legacy:** **`MainTabBar` / `MainTabShell`** are not used by **`MainTabs`** — prefer editing **`MainTabs.tsx`** and stacks for primary navigation changes.
+
+---
+
+## Search hints (for agents)
+
+| Question | Where to look |
+|----------|----------------|
+| Where is navigation defined? | `src/navigation/*.tsx`, **`types.ts`** |
+| What route params exist? | **`navigation/types.ts`** |
+| Where is screen X? | **`src/screens/<Name>Screen.tsx`** — confirm wiring in **`*Stack.tsx`** or **`RootNavigator.tsx`** |
+| Product flow / fields per screen? | **`Electrician-app.md`** |
+| Why won’t my image load? | **`require`** path from **`src/screens/`** → **`../../assets/…`** |
+
+---
+
+*Update this file when you add stacks, tabs, root routes, or top-level folders.*

@@ -6,7 +6,6 @@ import type { RootStackParamList } from './types';
 import { MainTabs } from './MainTabs';
 import { SplashScreen } from '../screens/SplashScreen';
 import { LanguageSelectionScreen } from '../screens/LanguageSelectionScreen';
-import { WelcomeCarouselScreen } from '../screens/WelcomeCarouselScreen';
 import { PhoneEntryScreen } from '../screens/PhoneEntryScreen';
 import { EnterOtpScreen } from '../screens/EnterOtpScreen';
 import { PermissionsScreen } from '../screens/PermissionsScreen';
@@ -52,7 +51,6 @@ export const RootNavigator: FC = () => (
   >
     <Stack.Screen name="Splash" component={SplashRoute} />
     <Stack.Screen name="LanguageSelection" component={LanguageSelectionScreen} />
-    <Stack.Screen name="WelcomeCarousel" component={WelcomeCarouselScreen} />
     <Stack.Screen name="PhoneEntry" component={PhoneEntryScreen} />
     <Stack.Screen name="EnterOtp" component={EnterOtpScreen} />
     <Stack.Screen name="Permissions" component={PermissionsScreen} />

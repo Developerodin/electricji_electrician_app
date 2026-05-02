@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FC } from 'react';
 import { useState } from 'react';
@@ -7,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -20,10 +22,13 @@ const RED = '#d9232d';
 const { width: SCREEN_W } = Dimensions.get('window');
 const SCALE = SCREEN_W / DESIGN_W;
 
+/** Same asset pipeline as delivery `LoginSignupScreen`. */
+const MASCOT = require('../../assets/login/login-mascot.png');
+
 type Props = NativeStackScreenProps<RootStackParamList, 'PhoneEntry'>;
 
 /**
- * Spec #4 — phone +91 locked, 10-digit input, T&C checkbox, Send OTP.
+ * Delivery `LoginSignupScreen` chrome; +91 row, Terms checkbox, Send OTP → EnterOtp.
  */
 export const PhoneEntryScreen: FC<Props> = ({ navigation }) => {
   const [mobile, setMobile] = useState('');
@@ -34,6 +39,8 @@ export const PhoneEntryScreen: FC<Props> = ({ navigation }) => {
   const valid = digits.length === 10 && accepted;
   const last2 = digits.slice(-2);
 
+  const toggleTerms = () => setAccepted((v) => !v);
+
   return (
     <View style={styles.root}>
       <KeyboardAvoidingView
@@ -41,7 +48,7 @@ export const PhoneEntryScreen: FC<Props> = ({ navigation }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? topInset : 0}
       >
-        <View style={styles.inner}>
+        <View style={[styles.inner, styles.contentAboveHero]}>
           <View style={[styles.topBar, { paddingTop: topInset + Math.max(8, 12 * SCALE) }]}>
             <Pressable
               accessibilityRole="button"
@@ -68,71 +75,103 @@ export const PhoneEntryScreen: FC<Props> = ({ navigation }) => {
                 <Text style={styles.logoTitle}>Electric Ji</Text>
               </View>
               <Text style={styles.tagline}>
-                <Text style={styles.taglineDark}>Technician partner — </Text>
+                <Text style={styles.taglineDark}>Making your life </Text>
                 <Text style={styles.taglineRed}>EAJI</Text>
               </Text>
             </View>
             <View style={styles.backSlot} />
           </View>
 
-          <View style={styles.form}>
-            <Text style={styles.screenTitle}>Enter your mobile number</Text>
-            <View style={styles.inputRow}>
-              <Text style={styles.cc}>+91</Text>
-              <TextInput
-                accessibilityLabel="10-digit mobile number"
-                value={digits}
-                onChangeText={(t) => setMobile(t.replace(/\D/g, '').slice(0, 10))}
-                placeholder="9876543210"
-                placeholderTextColor="#77878f"
-                keyboardType="phone-pad"
-                maxLength={10}
-                style={styles.input}
-                underlineColorAndroid="transparent"
-              />
+          <ScrollView
+            style={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.form}>
+              <View style={styles.formBlock}>
+                <Text style={styles.screenTitle}>Login or Signup</Text>
+                <View style={styles.inputRow}>
+                  <Image
+                    accessibilityElementsHidden
+                    importantForAccessibility="no"
+                    source={require('../../assets/login/icon-phone.png')}
+                    style={styles.inputIcon}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.cc} accessibilityLabel="Country code India">
+                    +91
+                  </Text>
+                  <TextInput
+                    accessibilityLabel="10-digit mobile number"
+                    value={digits}
+                    onChangeText={(t) => setMobile(t.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="Enter your mobile number..."
+                    placeholderTextColor="#77878f"
+                    keyboardType="phone-pad"
+                    maxLength={10}
+                    style={styles.input}
+                    underlineColorAndroid="transparent"
+                  />
+                </View>
+              </View>
+
+              <Pressable
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: accepted }}
+                onPress={toggleTerms}
+                hitSlop={10}
+                android_ripple={{
+                  color: 'rgba(217,35,45,0.12)',
+                  borderless: false,
+                }}
+                style={({ pressed }) => [
+                  styles.checkRow,
+                  pressed && Platform.OS === 'ios' ? styles.checkRowPressed : null,
+                ]}
+              >
+                <View style={[styles.box, accepted && styles.boxOn]} pointerEvents="none">
+                  {accepted ? (
+                    <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                  ) : null}
+                </View>
+                <Text style={styles.checkLabel}>
+                  I agree to Terms & Privacy Policy
+                </Text>
+              </Pressable>
+
+              <View style={styles.ctaArea}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Send OTP"
+                  disabled={!valid}
+                  style={({ pressed }) => [
+                    styles.ctaPrimary,
+                    !valid && styles.ctaDisabled,
+                    pressed && valid && styles.ctaPressed,
+                  ]}
+                  onPress={() =>
+                    navigation.navigate('EnterOtp', { phoneLast2: last2 })
+                  }
+                >
+                  <Text style={styles.ctaPrimaryLabel}>Send OTP</Text>
+                </Pressable>
+              </View>
             </View>
-
-            <Pressable
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: accepted }}
-              onPress={() => setAccepted((v) => !v)}
-              style={styles.checkRow}
-            >
-              <View style={[styles.box, accepted && styles.boxOn]} />
-              <Text style={styles.checkLabel}>
-                I agree to Terms & Privacy Policy
-              </Text>
-            </Pressable>
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Send OTP"
-              disabled={!valid}
-              style={({ pressed }) => [
-                styles.ctaPrimary,
-                !valid && styles.ctaDisabled,
-                pressed && valid && styles.ctaPressed,
-              ]}
-              onPress={() =>
-                navigation.navigate('EnterOtp', { phoneLast2: last2 })
-              }
-            >
-              <Text style={styles.ctaPrimaryLabel}>Send OTP</Text>
-            </Pressable>
-          </View>
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
 
-      {!keyboardOpen && (
-        <View style={styles.heroWrap} pointerEvents="none">
+      {!keyboardOpen ? (
+        <View style={[styles.heroWrap, styles.heroLayer]} pointerEvents="none">
           <Image
-            accessibilityLabel="Technician illustration"
-            source={require('../../assets/login/login-mascot.png')}
+            accessibilityLabel="Delivery partner illustration"
+            source={MASCOT}
             style={styles.hero}
             resizeMode="contain"
           />
         </View>
-      )}
+      ) : null}
     </View>
   );
 };
@@ -140,7 +179,41 @@ export const PhoneEntryScreen: FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#FFFFFF' },
   kav: { flex: 1 },
-  inner: { flex: 1, overflow: 'hidden' },
+  /** Sit above mascot so OTP / checkbox always receive taps (matches delivery layering intent). */
+  contentAboveHero: Platform.select({
+    ios: {
+      flex: 1,
+      position: 'relative',
+      zIndex: 2,
+    },
+    android: {
+      flex: 1,
+      position: 'relative',
+      zIndex: 2,
+      elevation: 6,
+    },
+    default: { flex: 1, position: 'relative', zIndex: 2 },
+  }),
+  heroLayer: Platform.select({
+    ios: {
+      zIndex: 1,
+    },
+    android: {
+      zIndex: 0,
+      elevation: 0,
+    },
+    default: {
+      zIndex: 1,
+    },
+  }),
+  inner: {
+    overflow: 'hidden',
+  },
+  scroll: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 32,
+  },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -167,7 +240,10 @@ const styles = StyleSheet.create({
     letterSpacing: -0.0503,
     ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
-  tagline: { marginTop: 2, textAlign: 'center' },
+  tagline: {
+    marginTop: 2,
+    textAlign: 'center',
+  },
   taglineDark: {
     fontFamily: 'Rubik_400Regular',
     color: '#000000',
@@ -184,21 +260,27 @@ const styles = StyleSheet.create({
   form: {
     paddingHorizontal: 16,
     marginTop: 48 * SCALE,
-    gap: 20 * SCALE,
+    gap: 24 * SCALE,
     maxWidth: 380,
     width: '100%',
     alignSelf: 'center',
+  },
+  formBlock: {
+    gap: 16 * SCALE,
+    width: '100%',
   },
   screenTitle: {
     fontFamily: 'PublicSans_700Bold',
     color: '#202020',
     fontSize: 24 * SCALE,
+    lineHeight: 48,
     letterSpacing: 0.288,
+    width: '100%',
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 16,
     paddingHorizontal: 16,
     minHeight: 48,
     borderWidth: 1,
@@ -206,10 +288,15 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     width: '100%',
   },
+  inputIcon: {
+    width: 24,
+    height: 24,
+  },
   cc: {
     fontFamily: 'PublicSans_600SemiBold',
     fontSize: 14 * SCALE,
     color: '#202020',
+    letterSpacing: 0.168,
   },
   input: {
     flex: 1,
@@ -222,13 +309,24 @@ const styles = StyleSheet.create({
       ? { includeFontPadding: false, textAlignVertical: 'center' }
       : {}),
   },
-  checkRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  checkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    minHeight: 48,
+    paddingVertical: 4,
+    alignSelf: 'stretch',
+  },
+  checkRowPressed: { opacity: 0.88 },
   box: {
-    width: 22,
-    height: 22,
+    width: 24,
+    height: 24,
     borderRadius: 4,
     borderWidth: 2,
     borderColor: '#77878f',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
   boxOn: { backgroundColor: RED, borderColor: RED },
   checkLabel: {
@@ -236,6 +334,11 @@ const styles = StyleSheet.create({
     fontFamily: 'PublicSans_500Medium',
     fontSize: 14 * SCALE,
     color: '#202020',
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
+  },
+  ctaArea: {
+    gap: 16 * SCALE,
+    width: '100%',
   },
   ctaPrimary: {
     alignItems: 'center',
@@ -243,6 +346,7 @@ const styles = StyleSheet.create({
     backgroundColor: RED,
     borderRadius: 4,
     paddingVertical: 14,
+    paddingHorizontal: 24,
     width: '100%',
     minHeight: 48,
   },
@@ -252,6 +356,7 @@ const styles = StyleSheet.create({
     fontFamily: 'PublicSans_700Bold',
     color: '#FFFFFF',
     fontSize: 16 * SCALE,
+    lineHeight: 24,
     letterSpacing: 0.192,
   },
   heroWrap: {

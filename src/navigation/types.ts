@@ -6,7 +6,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 export type RootStackParamList = {
   Splash: undefined;
   LanguageSelection: undefined;
-  WelcomeCarousel: undefined;
   PhoneEntry: undefined;
   EnterOtp: { phoneLast2?: string } | undefined;
   Permissions: undefined;
