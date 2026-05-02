@@ -21,7 +21,11 @@ export const WholesaleStack: FC = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="MarketplaceHome" component={MarketplaceHomeScreen} />
     <Stack.Screen name="CategoryListing" component={CategoryListingScreen} />
-    <Stack.Screen name="SearchFilter" component={SearchFilterScreen} />
+    <Stack.Screen
+      name="SearchFilter"
+      component={SearchFilterScreen}
+      options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+    />
     <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
     <Stack.Screen name="Cart" component={CartScreen} />
     <Stack.Screen name="Checkout" component={CheckoutScreen} />

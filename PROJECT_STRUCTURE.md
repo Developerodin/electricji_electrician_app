@@ -64,6 +64,7 @@ Routing is **React Navigation**, not `useState` route strings in `App.tsx`.
 - **Types:** `src/navigation/types.ts` — extend param lists when adding routes with params.
 - **Root stack:** `RootNavigator.tsx` — auth/onboarding/KYC linear chain, then **`MainTabs`**.
 - **Main app:** `MainTabs.tsx` — **`createBottomTabNavigator`** with five tabs; each tab is a **`createNativeStackNavigator`** stack (`*Stack.tsx`).
+- **`WholesaleStack`** — **`SearchFilter`** is presented **`modal`** (**`slide_from_bottom`**) so filters read as a sheet over the catalogue (delivery-style overlay feel).
 
 ### Bottom tabs (`MainTabParamList`)
 
@@ -190,6 +191,7 @@ Root screen names → typical TSX files:
 
 - **`src/theme/`** — prefer **`colors`**, **`fonts`**, **`spacing`**, **`shadows`** from `theme/index.ts` for new UI.
 - **`src/components/ui/`** — reusable controls; export barrel `components/ui/index.ts` where applicable.
+- **`OtpInput`** — delivery-style OTP cells (border, **`primary`** when filled, label/helper/error); controlled **`value` / `onChange`**; used on **`JobStartOtpScreen`** and **`JobEndOtpScreen`**.
 - **`IncomingJobLeadModal.tsx`** — incoming job overlay: aligns with delivery **`OrderAlertModal`** (full-screen dim `rgba(0,0,0,0.72)`, LIVE chip + SVG ring countdown, large white card `borderRadius` 28, stats strip, green earnings bar, Reject pill / Accept CTA row). Mounted from **`HomeScreen`** (`leadOpen`).
 - **`KycStepChrome.tsx`** — shared KYC chrome: white header (`icon-back`, centered title, Help or “Skip for now”), hairline divider, red progress track, `#f6f6f8` scroll body, sticky white footer (use `KycDeliveryPrimaryButton` / outline variants from `components/ui/KycDeliveryButtons.tsx`). Matches delivery **`KycVerificationScreen`** / **`VehicleDetailsScreen`** layout.
 
@@ -217,6 +219,7 @@ If Figma exports SVG-masked PNGs that look soft, run **`npm run assets:rasterize
 
 | Question | Where to look |
 |----------|----------------|
+| Notifications list UI (delivery-style rows)? | **`NotificationsCenterScreen.tsx`** |
 | Incoming lead / countdown modal (technician)? | **`src/components/IncomingJobLeadModal.tsx`** (+ **`HomeScreen`**) |
 | Where is navigation defined? | `src/navigation/*.tsx`, **`types.ts`** |
 | What route params exist? | **`navigation/types.ts`** |

@@ -183,7 +183,7 @@ export const SplashScreen: FC = () => {
         <View
           style={[
             styles.heroSection,
-            { marginTop: 12 * SCALE, paddingBottom: 8 * SCALE },
+            { marginTop: 12 * SCALE, paddingBottom: 40 * SCALE },
           ]}
         >
           <View style={[styles.heroFrame, { width: heroW, aspectRatio: heroAspect }]}>
