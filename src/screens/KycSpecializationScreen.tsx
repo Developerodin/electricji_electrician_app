@@ -1,17 +1,16 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FC } from 'react';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { RootStackParamList } from '../navigation/types';
 import { KycStepChrome } from '../components/KycStepChrome';
 import {
-  AppButton,
   Chip,
   FormField,
+  KycDeliveryPrimaryButton,
   RadioRow,
   SectionTitle,
 } from '../components/ui';
-import { spacing } from '../theme';
 
 const PRIMARY = [
   'Electrician',
@@ -50,17 +49,13 @@ export const KycSpecializationScreen: FC<Props> = ({ navigation }) => {
       subtitle="Pick your trade and years of experience"
       onBack={() => navigation.goBack()}
       footer={
-        <AppButton
+        <KycDeliveryPrimaryButton
           label="Continue"
           onPress={() => navigation.navigate('KycServiceArea')}
-          block
         />
       }
     >
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={{ gap: 12, width: '100%' }}>
         <SectionTitle title="Primary trade" caption="Choose one" />
         <View style={styles.list}>
           {PRIMARY.map((p) => (
@@ -72,7 +67,9 @@ export const KycSpecializationScreen: FC<Props> = ({ navigation }) => {
             />
           ))}
         </View>
+      </View>
 
+      <View style={{ gap: 12, width: '100%' }}>
         <SectionTitle title="Sub-skills" caption="Tap any that apply" />
         <View style={styles.chips}>
           {SUB_BY_PRIMARY[primary].map((s) => (
@@ -84,26 +81,20 @@ export const KycSpecializationScreen: FC<Props> = ({ navigation }) => {
             />
           ))}
         </View>
+      </View>
 
-        <FormField
-          label="Years of experience (0–25)"
-          keyboardType="number-pad"
-          value={years}
-          onChangeText={(t) => setYears(t.replace(/\D/g, '').slice(0, 2))}
-          helper="Helps us match you with the right jobs"
-        />
-      </ScrollView>
+      <FormField
+        label="Years of experience (0–25)"
+        keyboardType="number-pad"
+        value={years}
+        onChangeText={(t) => setYears(t.replace(/\D/g, '').slice(0, 2))}
+        helper="Helps us match you with the right jobs"
+      />
     </KycStepChrome>
   );
 };
 
 const styles = StyleSheet.create({
-  scroll: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xxxl,
-    gap: spacing.md,
-  },
-  list: { gap: spacing.sm },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  list: { gap: 12 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
 });

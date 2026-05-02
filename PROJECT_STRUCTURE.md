@@ -190,7 +190,7 @@ Root screen names → typical TSX files:
 
 - **`src/theme/`** — prefer **`colors`**, **`fonts`**, **`spacing`**, **`shadows`** from `theme/index.ts` for new UI.
 - **`src/components/ui/`** — reusable controls; export barrel `components/ui/index.ts` where applicable.
-- **`KycStepChrome.tsx`** — shared chrome for KYC steps (aligned with **Electrician-app.md** “Step X of 10” pattern).
+- **`KycStepChrome.tsx`** — shared KYC chrome: white header (`icon-back`, centered title, Help or “Skip for now”), hairline divider, red progress track, `#f6f6f8` scroll body, sticky white footer (use `KycDeliveryPrimaryButton` / outline variants from `components/ui/KycDeliveryButtons.tsx`). Matches delivery **`KycVerificationScreen`** / **`VehicleDetailsScreen`** layout.
 
 ---
 

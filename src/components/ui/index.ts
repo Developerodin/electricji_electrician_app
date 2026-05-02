@@ -34,5 +34,14 @@ export { FormField } from './FormField';
 export type { FormFieldProps } from './FormField';
 export { UploadCard } from './UploadCard';
 export type { UploadCardProps } from './UploadCard';
+export {
+  KycDeliveryPrimaryButton,
+  KycDeliveryOutlineButton,
+  KycDeliveryButtonRow,
+} from './KycDeliveryButtons';
+export type {
+  KycDeliveryPrimaryButtonProps,
+  KycDeliveryOutlineButtonProps,
+} from './KycDeliveryButtons';
 export { ProductCard } from './ProductCard';
 export type { ProductCardProps } from './ProductCard';

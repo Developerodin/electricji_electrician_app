@@ -6,7 +6,8 @@ import {
   View,
   type TextInputProps,
 } from 'react-native';
-import { colors, fonts, radii, scaleFont, spacing } from '../../theme';
+import { colors, fonts } from '../../theme';
+import { kycDvScale as KYC_SCALE, kycDeliveryPlatform as Platform } from '../../theme/kycDelivery';
 
 export type FormFieldProps = TextInputProps & {
   label: string;
@@ -33,10 +34,13 @@ export const FormField: FC<FormFieldProps> = ({
   ...rest
 }) => (
   <View style={styles.wrap}>
-    {label ? <Text style={styles.label}>{label}</Text> : null}
+    {label ? (
+      <Text style={styles.label}>{label}</Text>
+    ) : null}
     <View
       style={[
         styles.inputRow,
+        multiline && styles.inputRowMulti,
         !editable && styles.inputRowReadonly,
         Boolean(error) && styles.inputRowError,
       ]}
@@ -66,53 +70,61 @@ export const FormField: FC<FormFieldProps> = ({
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: spacing.xs,
+    gap: 8,
+    width: '100%',
   },
   label: {
-    fontFamily: fonts.publicSemiBold,
-    fontSize: scaleFont(12.5),
-    color: colors.muted,
-    letterSpacing: 0.3,
+    fontFamily: 'PublicSans_600SemiBold',
+    fontSize: 14 * KYC_SCALE,
+    color: '#000000',
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
+  },
+  inputRowMulti: {
+    alignItems: 'flex-start',
+    paddingVertical: 8,
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
-    borderWidth: 1.25,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    paddingHorizontal: spacing.md,
-    minHeight: 50,
+    borderWidth: 1,
+    borderColor: '#d3d3d3',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    minHeight: 52,
+    justifyContent: 'center',
   },
   inputRowReadonly: {
-    backgroundColor: colors.surfaceAlt,
-    borderColor: colors.borderLight,
+    backgroundColor: '#fafafa',
+    borderColor: '#d3d3d3',
   },
   inputRowError: {
     borderColor: colors.error,
   },
   input: {
     flex: 1,
-    paddingVertical: spacing.md - 2,
-    fontFamily: fonts.publicMedium,
-    fontSize: scaleFont(15),
+    paddingVertical: 8,
+    fontFamily: 'PublicSans_500Medium',
+    fontSize: 16 * KYC_SCALE,
+    letterSpacing: 0.192,
     color: colors.text,
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
   inputReadonly: {
     color: colors.textSoft,
   },
   adornment: {
-    marginHorizontal: spacing.xs,
+    marginHorizontal: 6,
   },
   helper: {
     fontFamily: fonts.publicRegular,
-    fontSize: scaleFont(11.5),
+    fontSize: 12 * KYC_SCALE,
     color: colors.muted,
     marginTop: 2,
   },
   error: {
     fontFamily: fonts.publicSemiBold,
-    fontSize: scaleFont(11.5),
+    fontSize: 12 * KYC_SCALE,
     color: colors.error,
     marginTop: 2,
   },

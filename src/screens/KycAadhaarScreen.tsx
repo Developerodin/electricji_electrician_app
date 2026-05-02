@@ -1,16 +1,15 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FC } from 'react';
 import { useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import type { RootStackParamList } from '../navigation/types';
 import { KycStepChrome } from '../components/KycStepChrome';
 import {
-  AppButton,
   FormField,
+  KycDeliveryPrimaryButton,
   SectionTitle,
   UploadCard,
 } from '../components/ui';
-import { spacing } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'KycAadhaar'>;
 
@@ -45,26 +44,22 @@ export const KycAadhaarScreen: FC<Props> = ({ navigation }) => {
       subtitle="We auto-fill details after upload"
       onBack={() => navigation.goBack()}
       footer={
-        <AppButton
+        <KycDeliveryPrimaryButton
           label="Continue"
           onPress={() => navigation.navigate('KycPan')}
-          block
         />
       }
     >
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
-        <FormField
-          label="Aadhaar number"
-          accessibilityLabel="Aadhaar number"
-          value={formatAadhaar(num)}
-          onChangeText={(t) => setNum(t.replace(/\D/g, ''))}
-          keyboardType="number-pad"
-          placeholder="XXXX XXXX XXXX"
-        />
+      <FormField
+        label="Aadhaar number"
+        accessibilityLabel="Aadhaar number"
+        value={formatAadhaar(num)}
+        onChangeText={(t) => setNum(t.replace(/\D/g, ''))}
+        keyboardType="number-pad"
+        placeholder="XXXX XXXX XXXX"
+      />
 
+      <View style={{ gap: 12, width: '100%' }}>
         <SectionTitle title="Upload card" caption="Front and back" />
         <UploadCard
           title="Aadhaar front"
@@ -84,7 +79,9 @@ export const KycAadhaarScreen: FC<Props> = ({ navigation }) => {
             tryOcr(frontUp, true);
           }}
         />
+      </View>
 
+      <View style={{ gap: 16, width: '100%' }}>
         <SectionTitle title="Auto-filled details" caption="Edit if needed" />
         <FormField label="Full name" value={ocrName} onChangeText={setOcrName} />
         <FormField label="Date of birth" value={ocrDob} onChangeText={setOcrDob} />
@@ -94,16 +91,7 @@ export const KycAadhaarScreen: FC<Props> = ({ navigation }) => {
           value={ocrAddr}
           onChangeText={setOcrAddr}
         />
-      </ScrollView>
+      </View>
     </KycStepChrome>
   );
 };
-
-const styles = StyleSheet.create({
-  scroll: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xxxl,
-    gap: spacing.md,
-  },
-});

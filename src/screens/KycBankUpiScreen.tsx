@@ -2,18 +2,19 @@ import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FC } from 'react';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { RootStackParamList } from '../navigation/types';
 import { KycStepChrome } from '../components/KycStepChrome';
 import {
-  AppButton,
   AppCard,
   FormField,
+  KycDeliveryOutlineButton,
+  KycDeliveryPrimaryButton,
   SectionTitle,
   SegmentedTabs,
   Tag,
 } from '../components/ui';
-import { colors, spacing } from '../theme';
+import { colors } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'KycBankUpi'>;
 
@@ -42,119 +43,110 @@ export const KycBankUpiScreen: FC<Props> = ({ navigation }) => {
       subtitle="Where your earnings will be credited"
       onBack={() => navigation.goBack()}
       footer={
-        <AppButton
+        <KycDeliveryPrimaryButton
           label="Submit for verification"
           onPress={() => navigation.navigate('KycStatus')}
-          block
         />
       }
     >
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
-        <SegmentedTabs
-          options={[
-            { id: 'bank', label: 'Bank account' },
-            { id: 'upi', label: 'UPI' },
-          ]}
-          value={tab}
-          onChange={setTab}
-        />
+      <SegmentedTabs
+        options={[
+          { id: 'bank', label: 'Bank account' },
+          { id: 'upi', label: 'UPI' },
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
 
-        {tab === 'bank' ? (
-          <>
-            <FormField
-              label="Account holder name"
-              value={holder}
-              onChangeText={setHolder}
-            />
-            <FormField
-              label="Account number"
-              value={acct}
-              onChangeText={setAcct}
-              keyboardType="number-pad"
-              placeholder="As on passbook"
-              secureTextEntry
-            />
-            <FormField
-              label="Confirm account number"
-              value={acctConfirm}
-              onChangeText={setAcctConfirm}
-              keyboardType="number-pad"
-              error={
-                acctConfirm.length > 0 && acct !== acctConfirm
-                  ? 'Account numbers do not match'
-                  : undefined
-              }
-            />
-            <FormField
-              label="IFSC code"
-              value={ifsc}
-              onChangeText={setIfsc}
-              autoCapitalize="characters"
-              onBlur={fetchBank}
-            />
-            <AppCard tone="tinted" style={styles.bankPreview}>
+      {tab === 'bank' ? (
+        <View style={{ gap: 16, width: '100%' }}>
+          <FormField
+            label="Account holder name"
+            value={holder}
+            onChangeText={setHolder}
+          />
+          <FormField
+            label="Account number"
+            value={acct}
+            onChangeText={setAcct}
+            keyboardType="number-pad"
+            placeholder="As on passbook"
+            secureTextEntry
+          />
+          <FormField
+            label="Confirm account number"
+            value={acctConfirm}
+            onChangeText={setAcctConfirm}
+            keyboardType="number-pad"
+            error={
+              acctConfirm.length > 0 && acct !== acctConfirm
+                ? 'Account numbers do not match'
+                : undefined
+            }
+          />
+          <FormField
+            label="IFSC code"
+            value={ifsc}
+            onChangeText={setIfsc}
+            autoCapitalize="characters"
+            onBlur={fetchBank}
+          />
+          <AppCard tone="tinted" style={styles.bankPreview}>
+            <View style={styles.bankRow}>
+              <View style={styles.bankIcon}>
+                <Ionicons name="business" size={18} color={colors.primary} />
+              </View>
+              <SectionTitle title={bankName} caption="Verified by IFSC" />
+            </View>
+          </AppCard>
+        </View>
+      ) : (
+        <View style={{ gap: 16, width: '100%' }}>
+          <FormField
+            label="UPI ID"
+            value={upi}
+            onChangeText={setUpi}
+            placeholder="name@paytm"
+            autoCapitalize="none"
+          />
+          <KycDeliveryOutlineButton
+            label={verified ? 'Verified' : 'Verify UPI'}
+            onPress={() => setVerified(true)}
+            disabled={verified}
+            leftIcon={
+              verified ? (
+                <Ionicons name="checkmark-done" size={18} color={colors.success} />
+              ) : null
+            }
+          />
+          {verified ? (
+            <AppCard tone="tinted">
               <View style={styles.bankRow}>
-                <View style={styles.bankIcon}>
-                  <Ionicons name="business" size={18} color={colors.primary} />
-                </View>
-                <SectionTitle title={bankName} caption="Verified by IFSC" />
+                <Tag label="Verified" tone="success" />
+                <SectionTitle
+                  title={`Holder: ${holder}`}
+                  caption="Funds will be sent here"
+                />
               </View>
             </AppCard>
-          </>
-        ) : (
-          <>
-            <FormField
-              label="UPI ID"
-              value={upi}
-              onChangeText={setUpi}
-              placeholder="name@paytm"
-              autoCapitalize="none"
-            />
-            <AppButton
-              label={verified ? 'Verified' : 'Verify UPI'}
-              variant={verified ? 'success' : 'primary'}
-              onPress={() => setVerified(true)}
-              leftIcon={
-                verified ? (
-                  <Ionicons name="checkmark-done" size={18} color={colors.white} />
-                ) : null
-              }
-            />
-            {verified ? (
-              <AppCard tone="tinted">
-                <View style={styles.bankRow}>
-                  <Tag label="Verified" tone="success" />
-                  <SectionTitle
-                    title={`Holder: ${holder}`}
-                    caption="Funds will be sent here"
-                  />
-                </View>
-              </AppCard>
-            ) : null}
-          </>
-        )}
-      </ScrollView>
+          ) : null}
+        </View>
+      )}
     </KycStepChrome>
   );
 };
 
 const styles = StyleSheet.create({
-  scroll: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xxxl,
-    gap: spacing.md,
-  },
   bankPreview: {
-    paddingVertical: spacing.md,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#d3d3d3',
   },
   bankRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: 14,
   },
   bankIcon: {
     width: 38,

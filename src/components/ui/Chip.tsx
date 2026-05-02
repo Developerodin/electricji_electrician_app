@@ -1,7 +1,7 @@
 import type { FC, ReactNode } from 'react';
-import { useRef } from 'react';
-import { Animated, Pressable, StyleSheet, Text } from 'react-native';
-import { colors, fonts, radii, scaleFont, spacing } from '../../theme';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import { colors } from '../../theme';
+import { kycDvScale as SCALE, kycDeliveryPlatform as Platform } from '../../theme/kycDelivery';
 
 export type ChipProps = {
   label: string;
@@ -11,86 +11,76 @@ export type ChipProps = {
   size?: 'sm' | 'md';
 };
 
-/**
- * Multi-select / filter chip with subtle press scale. Selected = red ring + tinted bg.
- */
+const RED = '#d9232d';
+
+/** Filter chip colours aligned with delivery vehicle-selection idle/selected shells. */
 export const Chip: FC<ChipProps> = ({
   label,
   selected = false,
   onPress,
   leftIcon,
   size = 'md',
-}) => {
-  const scale = useRef(new Animated.Value(1)).current;
-  const animate = (v: number) =>
-    Animated.spring(scale, {
-      toValue: v,
-      friction: 7,
-      tension: 220,
-      useNativeDriver: true,
-    }).start();
-
-  return (
-    <Animated.View style={{ transform: [{ scale }] }}>
-      <Pressable
-        accessibilityRole={onPress ? 'button' : undefined}
-        accessibilityState={{ selected }}
-        onPress={onPress}
-        onPressIn={onPress ? () => animate(0.95) : undefined}
-        onPressOut={onPress ? () => animate(1) : undefined}
-        style={({ pressed }) => [
-          styles.wrap,
-          size === 'sm' && styles.wrapSm,
-          selected && styles.selected,
-          pressed && onPress && styles.pressed,
-        ]}
-      >
-        {leftIcon}
-        <Text
-          style={[
-            styles.label,
-            size === 'sm' && styles.labelSm,
-            selected && styles.labelSelected,
-          ]}
-        >
-          {label}
-        </Text>
-      </Pressable>
-    </Animated.View>
-  );
-};
+}) => (
+  <Pressable
+    accessibilityRole={onPress ? 'button' : undefined}
+    accessibilityState={{ selected }}
+    onPress={onPress}
+    disabled={!onPress}
+    style={({ pressed }) => [
+      styles.wrap,
+      size === 'sm' && styles.wrapSm,
+      selected ? styles.selected : styles.idle,
+      pressed && onPress && styles.pressed,
+    ]}
+  >
+    {leftIcon}
+    <Text
+      style={[
+        styles.label,
+        size === 'sm' && styles.labelSm,
+        selected && styles.labelSelected,
+      ]}
+    >
+      {label}
+    </Text>
+  </Pressable>
+);
 
 const styles = StyleSheet.create({
   wrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md + 2,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: radii.pill,
-    borderWidth: 1.25,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 16,
+    borderWidth: 2,
   },
   wrapSm: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 14,
+  },
+  idle: {
+    borderColor: '#f0f0f0',
+    backgroundColor: '#f9fafb',
   },
   selected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySoft,
+    borderColor: RED,
+    backgroundColor: '#f7eaea',
   },
   label: {
-    fontFamily: fonts.publicMedium,
-    fontSize: scaleFont(14),
+    fontFamily: 'PublicSans_500Medium',
+    fontSize: 14 * SCALE,
     color: colors.textSoft,
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
   labelSm: {
-    fontSize: scaleFont(12.5),
+    fontSize: 12 * SCALE,
   },
   labelSelected: {
-    color: colors.primary,
-    fontFamily: fonts.publicSemiBold,
+    color: RED,
+    fontFamily: 'PublicSans_600SemiBold',
   },
   pressed: {
     opacity: 0.9,

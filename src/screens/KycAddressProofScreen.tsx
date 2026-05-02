@@ -1,17 +1,16 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FC } from 'react';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { RootStackParamList } from '../navigation/types';
 import { KycStepChrome } from '../components/KycStepChrome';
 import {
-  AppButton,
   Chip,
   FormField,
+  KycDeliveryPrimaryButton,
   SectionTitle,
   UploadCard,
 } from '../components/ui';
-import { spacing } from '../theme';
 
 const PROOF_TYPES = [
   'Utility Bill',
@@ -40,17 +39,13 @@ export const KycAddressProofScreen: FC<Props> = ({ navigation }) => {
       subtitle="Pick one document type and upload"
       onBack={() => navigation.goBack()}
       footer={
-        <AppButton
+        <KycDeliveryPrimaryButton
           label="Continue"
           onPress={() => navigation.navigate('KycLiveness')}
-          block
         />
       }
     >
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={{ gap: 12, width: '100%' }}>
         <SectionTitle title="Proof type" />
         <View style={styles.row}>
           {PROOF_TYPES.map((p) => (
@@ -62,14 +57,16 @@ export const KycAddressProofScreen: FC<Props> = ({ navigation }) => {
             />
           ))}
         </View>
+      </View>
 
-        <UploadCard
-          title={kind}
-          subtitle="Tap to upload (dummy)"
-          uploaded={uploaded}
-          onPress={() => setUploaded(true)}
-        />
+      <UploadCard
+        title={kind}
+        subtitle="Tap to upload (dummy)"
+        uploaded={uploaded}
+        onPress={() => setUploaded(true)}
+      />
 
+      <View style={{ gap: 16, width: '100%' }}>
         <SectionTitle title="Address" caption="Auto-filled where possible" />
         <FormField
           label="Current address"
@@ -95,17 +92,11 @@ export const KycAddressProofScreen: FC<Props> = ({ navigation }) => {
           value={`${city}, ${state}`}
           editable={false}
         />
-      </ScrollView>
+      </View>
     </KycStepChrome>
   );
 };
 
 const styles = StyleSheet.create({
-  scroll: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xxxl,
-    gap: spacing.md,
-  },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
 });

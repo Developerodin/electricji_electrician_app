@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, fonts, radii, scaleFont, shadows, spacing } from '../../theme';
+import { colors } from '../../theme';
+import { kycDvScale as SCALE, kycDeliveryPlatform as Platform } from '../../theme/kycDelivery';
 
 export type SegmentOption<T extends string> = { id: T; label: string };
 
@@ -10,9 +11,9 @@ export type SegmentedTabsProps<T extends string> = {
   onChange: (id: T) => void;
 };
 
-/**
- * iOS-style pill segment control. Used for Earnings period tabs, list filters.
- */
+const RED = '#d9232d';
+
+/** Segment rail — idle/active shells aligned with delivery vehicle-selection cards. */
 export function SegmentedTabs<T extends string>({
   options,
   value,
@@ -30,8 +31,7 @@ export function SegmentedTabs<T extends string>({
             onPress={() => onChange(seg.id)}
             style={[
               styles.cell,
-              active && styles.cellActive,
-              active && shadows.sm,
+              active ? styles.cellActive : styles.cellIdle,
             ]}
           >
             <Text style={[styles.label, active && styles.labelActive]}>
@@ -47,28 +47,40 @@ export function SegmentedTabs<T extends string>({
 const styles = StyleSheet.create({
   track: {
     flexDirection: 'row',
-    backgroundColor: colors.segmentTrack,
-    borderRadius: radii.md,
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
     padding: 4,
+    gap: 6,
     width: '100%',
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   cell: {
     flex: 1,
-    minHeight: 38,
+    minHeight: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radii.sm,
-    paddingHorizontal: spacing.sm,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    borderWidth: 2,
+  },
+  cellIdle: {
+    borderColor: 'transparent',
+    backgroundColor: 'transparent',
   },
   cellActive: {
-    backgroundColor: colors.white,
+    backgroundColor: '#f7eaea',
+    borderColor: RED,
   },
   label: {
-    fontFamily: fonts.publicSemiBold,
-    fontSize: scaleFont(13.5),
+    fontFamily: 'PublicSans_500Medium',
+    fontSize: 14 * SCALE,
     color: colors.muted,
+    textAlign: 'center',
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
   labelActive: {
-    color: colors.primary,
+    fontFamily: 'PublicSans_600SemiBold',
+    color: RED,
   },
 });

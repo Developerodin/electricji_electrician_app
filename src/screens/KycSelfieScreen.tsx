@@ -2,13 +2,26 @@ import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FC } from 'react';
 import { useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import {
+  Image,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import type { RootStackParamList } from '../navigation/types';
 import { KycStepChrome } from '../components/KycStepChrome';
-import { AppButton } from '../components/ui';
-import { colors, fonts, radii, scaleFont, shadows, spacing } from '../theme';
+import {
+  KycDeliveryButtonRow,
+  KycDeliveryOutlineButton,
+  KycDeliveryPrimaryButton,
+} from '../components/ui';
+import { colors, radii, shadows, spacing } from '../theme';
+import { kycDvScale as SCALE } from '../theme/kycDelivery';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'KycSelfie'>;
+
+const DV_RED = '#d9232d';
 
 /**
  * Spec #9 — KYC 2 Profile photo (dummy capture).
@@ -24,25 +37,25 @@ export const KycSelfieScreen: FC<Props> = ({ navigation }) => {
       onBack={() => navigation.goBack()}
       footer={
         captured ? (
-          <View style={styles.dualCta}>
+          <KycDeliveryButtonRow>
             <View style={styles.flex1}>
-              <AppButton
+              <KycDeliveryOutlineButton
                 label="Retake"
-                variant="outline"
                 onPress={() => setCaptured(false)}
-                block
               />
             </View>
             <View style={styles.flex1}>
-              <AppButton
+              <KycDeliveryPrimaryButton
                 label="Use photo"
                 onPress={() => navigation.navigate('KycAadhaar')}
-                block
               />
             </View>
-          </View>
+          </KycDeliveryButtonRow>
         ) : (
-          <AppButton label="Capture" onPress={() => setCaptured(true)} block />
+          <KycDeliveryPrimaryButton
+            label="Capture"
+            onPress={() => setCaptured(true)}
+          />
         )
       }
     >
@@ -56,7 +69,7 @@ export const KycSelfieScreen: FC<Props> = ({ navigation }) => {
             />
           ) : (
             <View style={styles.placeholder}>
-              <Ionicons name="camera-outline" size={36} color={colors.primary} />
+              <Ionicons name="camera-outline" size={36} color={DV_RED} />
             </View>
           )}
         </View>
@@ -79,25 +92,26 @@ export const KycSelfieScreen: FC<Props> = ({ navigation }) => {
   );
 };
 
-const Tip: FC<{ icon: 'sunny-outline' | 'happy-outline' | 'eye-off-outline'; text: string }> = ({
-  icon,
-  text,
-}) => (
+const Tip: FC<{
+  icon: 'sunny-outline' | 'happy-outline' | 'eye-off-outline';
+  text: string;
+}> = ({ icon, text }) => (
   <View style={styles.tipRow}>
     <View style={styles.tipIcon}>
-      <Ionicons name={icon} size={14} color={colors.primary} />
+      <Ionicons name={icon} size={14} color={DV_RED} />
     </View>
     <Text style={styles.tipText}>{text}</Text>
   </View>
 );
 
 const styles = StyleSheet.create({
+  flex1: { flex: 1 },
   body: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
     alignItems: 'center',
-    gap: spacing.sm,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    gap: 10,
+    width: '100%',
   },
   frame: {
     width: 220,
@@ -109,7 +123,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 4,
     borderColor: colors.white,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   preview: {
     width: '100%',
@@ -120,48 +134,55 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primarySoft,
+    backgroundColor: '#fce8e9',
   },
   title: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(18),
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 18 * SCALE,
     color: colors.text,
     textAlign: 'center',
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
   hint: {
-    fontFamily: fonts.publicRegular,
-    fontSize: scaleFont(13),
+    fontFamily: 'PublicSans_500Medium',
+    fontSize: 14 * SCALE,
     color: colors.muted,
     textAlign: 'center',
-    maxWidth: 280,
+    maxWidth: 320,
+    lineHeight: Math.round(14 * SCALE * 1.45),
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
   tips: {
     width: '100%',
-    marginTop: spacing.xl,
-    gap: spacing.sm,
+    marginTop: spacing.lg,
+    gap: 10,
+    maxWidth: 360,
+    alignSelf: 'center',
   },
   tipRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.xs,
+    gap: 10,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#eaeff2',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   tipIcon: {
     width: 26,
     height: 26,
     borderRadius: radii.sm,
-    backgroundColor: colors.primarySoft,
+    backgroundColor: '#fce8e9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   tipText: {
-    fontFamily: fonts.publicMedium,
-    fontSize: scaleFont(13),
+    fontFamily: 'PublicSans_500Medium',
+    fontSize: 14 * SCALE,
     color: colors.textSoft,
+    flex: 1,
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
-  dualCta: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  flex1: { flex: 1 },
 });

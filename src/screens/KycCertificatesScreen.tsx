@@ -2,13 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FC } from 'react';
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import type { RootStackParamList } from '../navigation/types';
 import { KycStepChrome } from '../components/KycStepChrome';
 import {
-  AppButton,
   AppCard,
   EmptyState,
+  KycDeliveryOutlineButton,
+  KycDeliveryPrimaryButton,
   SectionTitle,
   Tag,
 } from '../components/ui';
@@ -47,17 +48,13 @@ export const KycCertificatesScreen: FC<Props> = ({ navigation }) => {
       onBack={() => navigation.goBack()}
       onSkip={skip}
       footer={
-        <AppButton
+        <KycDeliveryPrimaryButton
           label="Continue"
           onPress={() => navigation.navigate('KycSpecialization')}
-          block
         />
       }
     >
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={{ gap: 12, width: '100%' }}>
         <SectionTitle title="Your certificates" caption={`${list.length} added`} />
 
         {list.length === 0 ? (
@@ -84,29 +81,20 @@ export const KycCertificatesScreen: FC<Props> = ({ navigation }) => {
             ))}
           </View>
         )}
+      </View>
 
-        <AppButton
-          label="Add certificate"
-          variant="outline"
-          onPress={addNext}
-          leftIcon={
-            <Ionicons name="add" size={18} color={colors.text} />
-          }
-        />
-      </ScrollView>
+      <KycDeliveryOutlineButton
+        label="Add certificate"
+        onPress={addNext}
+        leftIcon={<Ionicons name="add" size={18} color={colors.text} />}
+      />
     </KycStepChrome>
   );
 };
 
 const styles = StyleSheet.create({
-  scroll: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xxxl,
-    gap: spacing.md,
-  },
-  list: { gap: spacing.sm },
-  card: { padding: spacing.md },
+  list: { gap: 10 },
+  card: { padding: spacing.md, borderRadius: 12, borderWidth: 1, borderColor: '#d3d3d3' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -116,7 +104,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: radii.md,
-    backgroundColor: colors.primarySoft,
+    backgroundColor: '#fce8e9',
     alignItems: 'center',
     justifyContent: 'center',
   },

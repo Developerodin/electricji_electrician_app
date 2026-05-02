@@ -2,14 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FC } from 'react';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import type { RootStackParamList } from '../navigation/types';
 import { KycStepChrome } from '../components/KycStepChrome';
 import {
-  AppButton,
   AppCard,
   Chip,
   FormField,
+  KycDeliveryOutlineButton,
+  KycDeliveryPrimaryButton,
   SectionTitle,
 } from '../components/ui';
 import { colors, fonts, radii, scaleFont, spacing } from '../theme';
@@ -41,34 +42,29 @@ export const KycServiceAreaScreen: FC<Props> = ({ navigation }) => {
       subtitle="Where you’ll get jobs from"
       onBack={() => navigation.goBack()}
       footer={
-        <AppButton
+        <KycDeliveryPrimaryButton
           label="Continue"
           onPress={() => navigation.navigate('KycBankUpi')}
-          block
         />
       }
     >
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
-        <AppCard style={styles.mapCard} padded={false}>
-          <View style={styles.mapInner}>
-            <View style={styles.pinDot}>
-              <Ionicons name="location" size={20} color={colors.white} />
-            </View>
-            <Text style={styles.mapText}>Map preview · base location</Text>
+      <AppCard style={styles.mapCard} padded={false}>
+        <View style={styles.mapInner}>
+          <View style={styles.pinDot}>
+            <Ionicons name="location" size={20} color={colors.white} />
           </View>
-          <View style={styles.mapFooter}>
-            <AppButton
-              label="Set base location"
-              variant="outline"
-              size="sm"
-              onPress={() => {}}
-            />
-          </View>
-        </AppCard>
+          <Text style={styles.mapText}>Map preview · base location</Text>
+        </View>
+        <View style={styles.mapFooter}>
+          <KycDeliveryOutlineButton
+            label="Set base location"
+            size="sm"
+            onPress={() => {}}
+          />
+        </View>
+      </AppCard>
 
+      <View style={{ gap: 12, width: '100%' }}>
         <SectionTitle title="Service radius" caption={`${radius} km from base`} />
         <View style={styles.chips}>
           {RADII_KM.map((r) => (
@@ -80,7 +76,9 @@ export const KycServiceAreaScreen: FC<Props> = ({ navigation }) => {
             />
           ))}
         </View>
+      </View>
 
+      <View style={{ gap: 12, width: '100%' }}>
         <SectionTitle title="Additional pincodes" caption="Up to 5" />
         <FormField
           label="Pincodes"
@@ -88,39 +86,35 @@ export const KycServiceAreaScreen: FC<Props> = ({ navigation }) => {
           value={pinInput}
           onChangeText={setPinInput}
         />
-        <AppButton
+        <KycDeliveryOutlineButton
           label="Add pincodes"
-          variant="outline"
           size="sm"
           onPress={addPins}
         />
+      </View>
 
-        {pins.length > 0 ? (
-          <View style={styles.chips}>
-            {pins.map((p) => (
-              <Chip key={p} label={`${p} ×`} selected onPress={() => remove(p)} />
-            ))}
-          </View>
-        ) : null}
-      </ScrollView>
+      {pins.length > 0 ? (
+        <View style={styles.chips}>
+          {pins.map((p) => (
+            <Chip key={p} label={`${p} ×`} selected onPress={() => remove(p)} />
+          ))}
+        </View>
+      ) : null}
     </KycStepChrome>
   );
 };
 
 const styles = StyleSheet.create({
-  scroll: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xxxl,
-    gap: spacing.md,
-  },
   mapCard: {
     overflow: 'hidden',
     padding: 0,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#d3d3d3',
   },
   mapInner: {
     height: 140,
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: '#f9fafb',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
@@ -141,8 +135,8 @@ const styles = StyleSheet.create({
   mapFooter: {
     padding: spacing.md,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.borderLight,
-    alignItems: 'flex-start',
+    borderTopColor: '#e4e6ea',
+    alignItems: 'stretch',
   },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
 });

@@ -1,6 +1,10 @@
 import type { FC, ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, fonts, scaleFont, spacing } from '../../theme';
+import {
+  DV_RED,
+  kycDvScale as SCALE,
+  kycDeliveryPlatform as Platform,
+} from '../../theme/kycDelivery';
 
 export type SectionTitleProps = {
   title: string;
@@ -10,10 +14,7 @@ export type SectionTitleProps = {
   children?: ReactNode;
 };
 
-/**
- * Bold section header with optional trailing link / right slot.
- * Usage: <SectionTitle title="Recent jobs" trailingLabel="See all" onTrailingPress={...} />.
- */
+/** Section headings — typography matches delivery `VehicleDetailsScreen` headings. */
 export const SectionTitle: FC<SectionTitleProps> = ({
   title,
   caption,
@@ -45,7 +46,7 @@ export const SectionTitle: FC<SectionTitleProps> = ({
 
 const styles = StyleSheet.create({
   wrap: {
-    paddingTop: spacing.sm,
+    paddingTop: 4,
   },
   row: {
     flexDirection: 'row',
@@ -54,21 +55,24 @@ const styles = StyleSheet.create({
   },
   textCol: {
     flex: 1,
-    gap: 2,
+    gap: 4,
   },
   title: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(17),
-    color: colors.text,
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 18 * SCALE,
+    color: '#202020',
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
   caption: {
-    fontFamily: fonts.publicRegular,
-    fontSize: scaleFont(12.5),
-    color: colors.muted,
+    fontFamily: 'PublicSans_500Medium',
+    fontSize: 14 * SCALE,
+    color: '#77878f',
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
   trailing: {
-    fontFamily: fonts.publicSemiBold,
-    fontSize: scaleFont(13),
-    color: colors.primary,
+    fontFamily: 'PublicSans_600SemiBold',
+    fontSize: 14 * SCALE,
+    color: DV_RED,
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
 });

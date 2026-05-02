@@ -1,16 +1,15 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FC } from 'react';
 import { useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import type { RootStackParamList } from '../navigation/types';
 import { KycStepChrome } from '../components/KycStepChrome';
 import {
-  AppButton,
   FormField,
+  KycDeliveryPrimaryButton,
   SectionTitle,
   UploadCard,
 } from '../components/ui';
-import { spacing } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'KycPan'>;
 
@@ -30,29 +29,25 @@ export const KycPanScreen: FC<Props> = ({ navigation }) => {
       subtitle="Required for tax compliance"
       onBack={() => navigation.goBack()}
       footer={
-        <AppButton
+        <KycDeliveryPrimaryButton
           label="Continue"
           onPress={() => navigation.navigate('KycAddressProof')}
-          block
         />
       }
     >
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
-        <FormField
-          label="PAN number"
-          autoCapitalize="characters"
-          value={pan}
-          onChangeText={(t) =>
-            setPan(t.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10))
-          }
-          placeholder="ABCDE1234F"
-          helper="10 characters, format: ABCDE1234F"
-          error={pan.length === 10 && !valid ? 'Invalid PAN format' : undefined}
-        />
+      <FormField
+        label="PAN number"
+        autoCapitalize="characters"
+        value={pan}
+        onChangeText={(t) =>
+          setPan(t.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10))
+        }
+        placeholder="ABCDE1234F"
+        helper="10 characters, format: ABCDE1234F"
+        error={pan.length === 10 && !valid ? 'Invalid PAN format' : undefined}
+      />
 
+      <View style={{ gap: 12, width: '100%' }}>
         <SectionTitle title="Upload PAN card" caption="Front side only" />
         <UploadCard
           title="PAN card image"
@@ -60,16 +55,7 @@ export const KycPanScreen: FC<Props> = ({ navigation }) => {
           uploaded={uploaded}
           onPress={() => setUploaded(true)}
         />
-      </ScrollView>
+      </View>
     </KycStepChrome>
   );
 };
-
-const styles = StyleSheet.create({
-  scroll: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xxxl,
-    gap: spacing.md,
-  },
-});

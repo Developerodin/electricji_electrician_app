@@ -2,11 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FC } from 'react';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import type { RootStackParamList } from '../navigation/types';
 import { KycStepChrome } from '../components/KycStepChrome';
-import { AppButton } from '../components/ui';
-import { colors, fonts, radii, scaleFont, shadows, spacing } from '../theme';
+import { KycDeliveryPrimaryButton } from '../components/ui';
+import { colors, radii, shadows, spacing } from '../theme';
+import { kycDvScale as SCALE } from '../theme/kycDelivery';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'KycLiveness'>;
 
@@ -15,6 +16,8 @@ const STEPS = [
   { id: 2, icon: 'happy-outline' as const, label: 'Blink twice' },
   { id: 3, icon: 'sparkles-outline' as const, label: 'Smile gently' },
 ];
+
+const DV_RED = '#d9232d';
 
 /**
  * Spec #13 — KYC 6 Liveness (dummy capture).
@@ -30,13 +33,15 @@ export const KycLivenessScreen: FC<Props> = ({ navigation }) => {
       onBack={() => navigation.goBack()}
       footer={
         done ? (
-          <AppButton
+          <KycDeliveryPrimaryButton
             label="Continue"
             onPress={() => navigation.navigate('KycCertificates')}
-            block
           />
         ) : (
-          <AppButton label="Simulate capture" onPress={() => setDone(true)} block />
+          <KycDeliveryPrimaryButton
+            label="Simulate capture"
+            onPress={() => setDone(true)}
+          />
         )
       }
     >
@@ -45,7 +50,7 @@ export const KycLivenessScreen: FC<Props> = ({ navigation }) => {
           <Ionicons
             name={done ? 'checkmark-circle' : 'scan-outline'}
             size={done ? 84 : 64}
-            color={done ? colors.success : colors.primary}
+            color={done ? colors.success : DV_RED}
           />
         </View>
 
@@ -66,16 +71,11 @@ export const KycLivenessScreen: FC<Props> = ({ navigation }) => {
         <View style={styles.stepList}>
           {STEPS.map((s) => (
             <View key={s.id} style={styles.stepRow}>
-              <View
-                style={[
-                  styles.stepIcon,
-                  done && styles.stepIconDone,
-                ]}
-              >
+              <View style={[styles.stepIcon, done && styles.stepIconDone]}>
                 <Ionicons
                   name={done ? 'checkmark' : s.icon}
                   size={16}
-                  color={done ? colors.white : colors.primary}
+                  color={done ? colors.white : DV_RED}
                 />
               </View>
               <Text style={styles.stepText}>{s.label}</Text>
@@ -89,11 +89,11 @@ export const KycLivenessScreen: FC<Props> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   body: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
     alignItems: 'center',
-    gap: spacing.sm,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    gap: 10,
+    width: '100%',
   },
   faceFrame: {
     width: 200,
@@ -102,41 +102,49 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: '#eaeff2',
   },
   title: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(20),
+    fontFamily: 'PublicSans_700Bold',
+    fontSize: 20 * SCALE,
     color: colors.text,
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
   hint: {
-    fontFamily: fonts.publicRegular,
-    fontSize: scaleFont(13),
+    fontFamily: 'PublicSans_500Medium',
+    fontSize: 14 * SCALE,
     color: colors.muted,
     textAlign: 'center',
-    maxWidth: 280,
+    maxWidth: 300,
+    lineHeight: Math.round(14 * SCALE * 1.45),
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
   stepList: {
     width: '100%',
-    marginTop: spacing.xl,
-    gap: spacing.sm,
+    marginTop: spacing.lg,
+    gap: 10,
+    maxWidth: 360,
+    alignSelf: 'center',
   },
   stepRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: 14,
     backgroundColor: colors.white,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#f0f0f0',
+    width: '100%',
   },
   stepIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: radii.sm,
-    backgroundColor: colors.primarySoft,
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: '#fce8e9',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -144,8 +152,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.success,
   },
   stepText: {
-    fontFamily: fonts.publicMedium,
-    fontSize: scaleFont(14),
+    fontFamily: 'PublicSans_500Medium',
+    fontSize: 14 * SCALE,
     color: colors.textSoft,
+    flex: 1,
+    ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
 });

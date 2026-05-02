@@ -4,20 +4,18 @@ import { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
 import type { RootStackParamList } from '../navigation/types';
 import { KycStepChrome } from '../components/KycStepChrome';
 import {
-  AppButton,
   Chip,
   FormField,
+  KycDeliveryPrimaryButton,
   RadioRow,
   SectionTitle,
 } from '../components/ui';
-import { spacing } from '../theme';
 
 const LANG_OPTIONS = ['Hindi', 'English', 'Marathi', 'Gujarati', 'Tamil', 'Telugu'];
 
@@ -54,19 +52,14 @@ export const PersonalInfoScreen: FC<Props> = ({ navigation }) => {
         subtitle="Just the basics — takes 30 seconds"
         onBack={() => navigation.goBack()}
         footer={
-          <AppButton
+          <KycDeliveryPrimaryButton
             label="Continue"
             disabled={!canNext}
             onPress={() => navigation.navigate('KycSelfie')}
-            block
           />
         }
       >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
-        >
+        <View style={styles.fields}>
           <FormField
             label="Full name"
             accessibilityLabel="Full name"
@@ -83,7 +76,9 @@ export const PersonalInfoScreen: FC<Props> = ({ navigation }) => {
             placeholder="DD / MM / YYYY"
             keyboardType="number-pad"
           />
+        </View>
 
+        <View style={styles.block}>
           <SectionTitle title="Gender" />
           <View style={styles.list}>
             {(['Male', 'Female', 'Other'] as const).map((g) => (
@@ -95,7 +90,9 @@ export const PersonalInfoScreen: FC<Props> = ({ navigation }) => {
               />
             ))}
           </View>
+        </View>
 
+        <View style={styles.block}>
           <SectionTitle
             title="Languages you speak"
             caption="Pick all that apply"
@@ -110,7 +107,7 @@ export const PersonalInfoScreen: FC<Props> = ({ navigation }) => {
               />
             ))}
           </View>
-        </ScrollView>
+        </View>
       </KycStepChrome>
     </KeyboardAvoidingView>
   );
@@ -118,12 +115,8 @@ export const PersonalInfoScreen: FC<Props> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  scroll: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xxxl,
-    gap: spacing.md,
-  },
-  list: { gap: spacing.sm },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  fields: { gap: 16, width: '100%' },
+  block: { gap: 16, width: '100%' },
+  list: { gap: 12 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
 });
