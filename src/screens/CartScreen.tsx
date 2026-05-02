@@ -14,7 +14,14 @@ import {
   SectionTitle,
 } from '../components/ui';
 import { MOCK_PRODUCTS } from '../mocks';
-import { colors, fonts, radii, scaleFont, spacing } from '../theme';
+import {
+  colors,
+  DESIGN_W,
+  fonts,
+  radii,
+  scaleFont,
+  spacing,
+} from '../theme';
 
 type Props = NativeStackScreenProps<WholesaleStackParamList, 'Cart'>;
 
@@ -152,12 +159,17 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
     paddingBottom: spacing.xxxl,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: DESIGN_W,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
     padding: spacing.md,
+    borderWidth: 2,
+    borderColor: 'rgba(216,217,221,0.16)',
   },
   thumb: {
     width: 64,

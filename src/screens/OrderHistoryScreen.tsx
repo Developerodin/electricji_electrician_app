@@ -2,18 +2,31 @@ import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FC } from 'react';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import type { WholesaleStackParamList } from '../navigation/types';
 import {
   AppCard,
   EmptyState,
   ScreenHeader,
   ScreenScaffold,
-  SegmentedTabs,
   Tag,
 } from '../components/ui';
 import { MOCK_ORDERS } from '../mocks';
-import { colors, fonts, radii, scaleFont, spacing } from '../theme';
+import {
+  colors,
+  contentMaxWidth,
+  DESIGN_W,
+  fonts,
+  radii,
+  scaleFont,
+  spacing,
+} from '../theme';
 
 type Props = NativeStackScreenProps<WholesaleStackParamList, 'OrderHistory'>;
 
@@ -24,6 +37,15 @@ const TONE: Record<string, 'warning' | 'success' | 'info' | 'danger'> = {
   Delivered: 'success',
   Cancelled: 'danger',
 };
+
+const SEGMENTS: { id: Filter; label: string }[] = [
+  { id: 'active', label: 'Active' },
+  { id: 'completed', label: 'Completed' },
+  { id: 'cancelled', label: 'Cancelled' },
+];
+
+const CARD_MAX = contentMaxWidth;
+const TILE_BORDER = 'rgba(216,217,221,0.16)';
 
 /**
  * Spec #48 — Order history grouped by status.
@@ -40,16 +62,33 @@ export const OrderHistoryScreen: FC<Props> = ({ navigation }) => {
   return (
     <ScreenScaffold>
       <ScreenHeader title="My orders" onBack={() => navigation.goBack()} />
-      <View style={styles.tabsWrap}>
-        <SegmentedTabs
-          options={[
-            { id: 'active', label: 'Active' },
-            { id: 'completed', label: 'Completed' },
-            { id: 'cancelled', label: 'Cancelled' },
-          ]}
-          value={filter}
-          onChange={setFilter}
-        />
+      <View style={styles.segmentSection}>
+        <View style={styles.segmentTrack}>
+          {SEGMENTS.map((seg) => {
+            const active = filter === seg.id;
+            return (
+              <Pressable
+                key={seg.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                onPress={() => setFilter(seg.id)}
+                style={[
+                  styles.segmentCell,
+                  active && styles.segmentCellActive,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.segmentLabel,
+                    active && styles.segmentLabelActive,
+                  ]}
+                >
+                  {seg.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
       <ScrollView
         contentContainerStyle={styles.list}
@@ -65,6 +104,7 @@ export const OrderHistoryScreen: FC<Props> = ({ navigation }) => {
           visible.map((o) => (
             <AppCard
               key={o.id}
+              style={styles.orderCard}
               onPress={() =>
                 navigation.navigate('OrderTracking', { orderId: o.id })
               }
@@ -92,14 +132,53 @@ export const OrderHistoryScreen: FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  tabsWrap: {
+  segmentSection: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
+    width: '100%',
+    maxWidth: DESIGN_W,
+    alignSelf: 'center',
+  },
+  segmentTrack: {
+    flexDirection: 'row',
+    backgroundColor: colors.segmentTrack,
+    borderRadius: 12,
+    padding: 4,
+    maxWidth: CARD_MAX,
+    width: '100%',
+    alignSelf: 'center',
+  },
+  segmentCell: {
+    flex: 1,
+    minHeight: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+  },
+  segmentCellActive: {
+    backgroundColor: colors.white,
+  },
+  segmentLabel: {
+    fontFamily: fonts.publicSemiBold,
+    fontSize: scaleFont(14),
+    color: colors.muted,
+  },
+  segmentLabelActive: {
+    color: colors.primary,
   },
   list: {
     padding: spacing.lg,
-    gap: spacing.md,
+    gap: 12,
     paddingBottom: spacing.xxxl,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: DESIGN_W,
+  },
+  orderCard: {
+    borderWidth: 2,
+    borderColor: TILE_BORDER,
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   iconWrap: {

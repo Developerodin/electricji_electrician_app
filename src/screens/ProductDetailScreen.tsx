@@ -13,7 +13,14 @@ import {
   Tag,
 } from '../components/ui';
 import { MOCK_PRODUCTS } from '../mocks';
-import { colors, fonts, radii, scaleFont, scaleFont as sf, spacing } from '../theme';
+import {
+  colors,
+  DESIGN_W,
+  fonts,
+  radii,
+  scaleFont,
+  spacing,
+} from '../theme';
 
 type Props = NativeStackScreenProps<WholesaleStackParamList, 'ProductDetail'>;
 
@@ -33,18 +40,34 @@ export const ProductDetailScreen: FC<Props> = ({ navigation, route }) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.hero}>
-          <Ionicons name="cube-outline" size={64} color={colors.primary} />
+          <Ionicons name="cube-outline" size={48} color={colors.white} />
+          <Text style={styles.heroTitle}>{p.name}</Text>
+          <View style={styles.heroMeta}>
+            {p.savePct ? (
+              <View style={styles.heroChip}>
+                <Ionicons name="pricetag" size={12} color={colors.white} />
+                <Text style={styles.heroChipTxt}>Save {p.savePct}%</Text>
+              </View>
+            ) : null}
+            {p.rating ? (
+              <View style={styles.heroChip}>
+                <Ionicons name="star" size={12} color={colors.white} />
+                <Text style={styles.heroChipTxt}>★ {p.rating}</Text>
+              </View>
+            ) : null}
+            {p.brand ? (
+              <View style={styles.heroChip}>
+                <Text style={styles.heroChipTxt}>{p.brand}</Text>
+              </View>
+            ) : null}
+          </View>
         </View>
 
         <View style={styles.tagRow}>
-          {p.savePct ? (
-            <Tag label={`Save ${p.savePct}%`} tone="success" />
+          {p.category ? (
+            <Tag label={p.category} tone="info" />
           ) : null}
-          {p.rating ? <Tag label={`★ ${p.rating}`} tone="warning" /> : null}
-          {p.brand ? <Tag label={p.brand} tone="primary" /> : null}
         </View>
-
-        <Text style={styles.name}>{p.name}</Text>
 
         <AppCard tone="tinted" style={styles.priceCard}>
           <Text style={styles.priceLabel}>Trade price</Text>
@@ -55,9 +78,18 @@ export const ProductDetailScreen: FC<Props> = ({ navigation, route }) => {
         <SectionTitle title="Highlights" />
         <AppCard padded={false}>
           {[
-            { icon: 'shield-checkmark-outline', label: 'ISI certified · 1 year warranty' },
-            { icon: 'flash-outline', label: 'Same-day dispatch from local warehouse' },
-            { icon: 'pricetag-outline', label: 'Bulk discount on 10+ units' },
+            {
+              icon: 'shield-checkmark-outline',
+              label: 'ISI certified · 1 year warranty',
+            },
+            {
+              icon: 'flash-outline',
+              label: 'Same-day dispatch from local warehouse',
+            },
+            {
+              icon: 'pricetag-outline',
+              label: 'Bulk discount on 10+ units',
+            },
           ].map((row, i, arr) => (
             <View
               key={row.label}
@@ -84,7 +116,9 @@ export const ProductDetailScreen: FC<Props> = ({ navigation, route }) => {
           variant="outline"
           onPress={() => navigation.navigate('Cart')}
           block
-          leftIcon={<Ionicons name="cart-outline" size={18} color={colors.text} />}
+          leftIcon={
+            <Ionicons name="cart-outline" size={18} color={colors.text} />
+          }
         />
         <AppButton
           label="Buy now"
@@ -101,45 +135,66 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
     paddingBottom: spacing.xxxl,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: DESIGN_W,
   },
   hero: {
     height: 200,
     borderRadius: radii.lg,
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: colors.primary,
+    padding: spacing.lg,
+    justifyContent: 'flex-end',
+    gap: spacing.xs,
+  },
+  heroTitle: {
+    fontFamily: fonts.publicBold,
+    fontSize: scaleFont(18),
+    color: colors.white,
+  },
+  heroMeta: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    flexWrap: 'wrap',
+  },
+  heroChip: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radii.pill,
+  },
+  heroChipTxt: {
+    fontFamily: fonts.publicSemiBold,
+    fontSize: scaleFont(11),
+    color: colors.white,
   },
   tagRow: {
     flexDirection: 'row',
     gap: 6,
     flexWrap: 'wrap',
   },
-  name: {
-    fontFamily: fonts.publicBold,
-    fontSize: sf(20),
-    color: colors.text,
-  },
   priceCard: {
     paddingVertical: spacing.md,
   },
   priceLabel: {
     fontFamily: fonts.publicSemiBold,
-    fontSize: sf(11.5),
+    fontSize: scaleFont(11.5),
     color: colors.primary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   b2b: {
     fontFamily: fonts.publicBold,
-    fontSize: sf(28),
+    fontSize: scaleFont(28),
     color: colors.primary,
     marginTop: 2,
   },
   mrp: {
     fontFamily: fonts.publicRegular,
-    fontSize: sf(13),
+    fontSize: scaleFont(13),
     color: colors.muted,
     textDecorationLine: 'line-through',
   },

@@ -1,16 +1,25 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FC } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { WholesaleStackParamList } from '../navigation/types';
 import {
   AppButton,
   AppCard,
   BottomCtaBar,
+  ScreenHeader,
   ScreenScaffold,
   Tag,
 } from '../components/ui';
-import { colors, fonts, radii, scaleFont, shadows, spacing } from '../theme';
+import {
+  colors,
+  DESIGN_W,
+  fonts,
+  radii,
+  scaleFont,
+  shadows,
+  spacing,
+} from '../theme';
 
 type Props = NativeStackScreenProps<WholesaleStackParamList, 'OrderConfirmation'>;
 
@@ -19,28 +28,38 @@ type Props = NativeStackScreenProps<WholesaleStackParamList, 'OrderConfirmation'
  */
 export const OrderConfirmationScreen: FC<Props> = ({ navigation, route }) => (
   <ScreenScaffold>
-    <View style={styles.body}>
-      <View style={[styles.tickRing, shadows.lg]}>
-        <Ionicons name="checkmark" size={48} color={colors.white} />
+    <ScreenHeader
+      title="Order placed"
+      onBack={() => navigation.popToTop()}
+    />
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.scroll}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.inner}>
+        <View style={[styles.tickRing, shadows.lg]}>
+          <Ionicons name="checkmark" size={48} color={colors.white} />
+        </View>
+        <Text style={styles.sub}>
+          We’ll keep you posted as it ships.
+        </Text>
+        <AppCard tone="tinted" style={styles.detailCard}>
+          <View style={styles.row}>
+            <Text style={styles.label}>Order ID</Text>
+            <Tag label={route.params.orderId} tone="primary" />
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Estimated delivery</Text>
+            <Text style={styles.value}>Sat, 4 May</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Payment</Text>
+            <Text style={styles.value}>Wallet · ₹2,596</Text>
+          </View>
+        </AppCard>
       </View>
-      <Text style={styles.h1}>Order placed</Text>
-      <Text style={styles.sub}>We’ll keep you posted as it ships.</Text>
-
-      <AppCard tone="tinted" style={styles.detailCard}>
-        <View style={styles.row}>
-          <Text style={styles.label}>Order ID</Text>
-          <Tag label={route.params.orderId} tone="primary" />
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Estimated delivery</Text>
-          <Text style={styles.value}>Sat, 4 May</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Payment</Text>
-          <Text style={styles.value}>Wallet · ₹2,596</Text>
-        </View>
-      </AppCard>
-    </View>
+    </ScrollView>
     <BottomCtaBar>
       <AppButton
         label="Continue shopping"
@@ -60,12 +79,19 @@ export const OrderConfirmationScreen: FC<Props> = ({ navigation, route }) => (
 );
 
 const styles = StyleSheet.create({
-  body: {
-    flex: 1,
+  scroll: {
+    flexGrow: 1,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xxxl,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xxxl,
+  },
+  inner: {
     alignItems: 'center',
     gap: spacing.sm,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: DESIGN_W,
+    paddingBottom: spacing.lg,
   },
   tickRing: {
     width: 96,
@@ -75,11 +101,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
-  },
-  h1: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(24),
-    color: colors.text,
   },
   sub: {
     fontFamily: fonts.publicRegular,

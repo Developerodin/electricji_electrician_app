@@ -14,7 +14,7 @@ import {
   SectionTitle,
   UploadCard,
 } from '../components/ui';
-import { colors, spacing } from '../theme';
+import { colors, DESIGN_W, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<WholesaleStackParamList, 'ReturnsRefund'>;
 
@@ -106,6 +106,9 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
     paddingBottom: spacing.xxxl,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: DESIGN_W,
   },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
 });

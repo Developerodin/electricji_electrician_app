@@ -1,15 +1,10 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { FC } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { WholesaleStackParamList } from '../navigation/types';
-import {
-  ProductCard,
-  ScreenHeader,
-  ScreenScaffold,
-  SectionTitle,
-} from '../components/ui';
+import { ProductCard, ScreenHeader, ScreenScaffold } from '../components/ui';
 import { MOCK_PRODUCTS } from '../mocks';
-import { spacing } from '../theme';
+import { colors, DESIGN_W, fonts, scaleFont, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<WholesaleStackParamList, 'CategoryListing'>;
 
@@ -26,14 +21,14 @@ export const CategoryListingScreen: FC<Props> = ({ navigation, route }) => {
         title={route.params.category}
         onBack={() => navigation.goBack()}
       />
+      <View style={styles.metaStrip}>
+        <Text style={styles.metaTitle}>{rows.length} products</Text>
+        <Text style={styles.metaCap}>Trade rates apply</Text>
+      </View>
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        <SectionTitle
-          title={`${rows.length} products`}
-          caption="At your trade rate"
-        />
         <View style={styles.grid}>
           {rows.map((p) => (
             <ProductCard
@@ -57,15 +52,40 @@ export const CategoryListingScreen: FC<Props> = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
+  metaStrip: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.white,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderLight,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: DESIGN_W,
+  },
+  metaTitle: {
+    fontFamily: fonts.publicBold,
+    fontSize: scaleFont(17),
+    color: colors.text,
+  },
+  metaCap: {
+    fontFamily: fonts.publicMedium,
+    fontSize: scaleFont(12.5),
+    color: colors.muted,
+    marginTop: 2,
+  },
   scroll: {
     padding: spacing.lg,
-    gap: spacing.md,
+    gap: 12,
     paddingBottom: spacing.xxxl,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: DESIGN_W,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
-    rowGap: spacing.md,
+    gap: 12,
+    rowGap: 12,
+    justifyContent: 'space-between',
   },
 });

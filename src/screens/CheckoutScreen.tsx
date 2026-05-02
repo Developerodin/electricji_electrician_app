@@ -13,7 +13,14 @@ import {
   ScreenScaffold,
   SectionTitle,
 } from '../components/ui';
-import { colors, fonts, radii, scaleFont, spacing } from '../theme';
+import {
+  colors,
+  DESIGN_W,
+  fonts,
+  radii,
+  scaleFont,
+  spacing,
+} from '../theme';
 
 type Props = NativeStackScreenProps<WholesaleStackParamList, 'Checkout'>;
 
@@ -118,6 +125,9 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.md,
     paddingBottom: spacing.xxxl,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: DESIGN_W,
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   iconWrap: {

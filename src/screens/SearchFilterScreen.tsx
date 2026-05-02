@@ -13,7 +13,7 @@ import {
   ScreenScaffold,
   SectionTitle,
 } from '../components/ui';
-import { colors, spacing } from '../theme';
+import { colors, DESIGN_W, radii, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<WholesaleStackParamList, 'SearchFilter'>;
 
@@ -34,7 +34,10 @@ export const SearchFilterScreen: FC<Props> = ({ navigation }) => {
     setBrands((p) => (p.includes(b) ? p.filter((x) => x !== b) : [...p, b]));
 
   return (
-    <ScreenScaffold>
+    <ScreenScaffold bg="white" style={styles.sheetRoot}>
+      <View style={styles.grabberRow}>
+        <View style={styles.grabber} />
+      </View>
       <ScreenHeader title="Search & filter" onBack={() => navigation.goBack()} />
       <ScrollView
         contentContainerStyle={styles.body}
@@ -109,10 +112,30 @@ export const SearchFilterScreen: FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  sheetRoot: {
+    flex: 1,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    overflow: 'hidden',
+  },
+  grabberRow: {
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 6,
+  },
+  grabber: {
+    width: 40,
+    height: 4,
+    borderRadius: radii.sm,
+    backgroundColor: 'rgba(17,24,39,0.14)',
+  },
   body: {
     padding: spacing.lg,
     gap: spacing.md,
     paddingBottom: spacing.xxxl,
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: DESIGN_W,
   },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
 });

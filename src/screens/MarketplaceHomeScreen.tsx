@@ -1,6 +1,8 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps, FC } from 'react';
 import {
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -17,7 +19,15 @@ import {
   SectionTitle,
 } from '../components/ui';
 import { MOCK_PRODUCTS } from '../mocks';
-import { colors, fonts, radii, scaleFont, shadows, spacing } from '../theme';
+import {
+  colors,
+  DESIGN_W,
+  fonts,
+  radii,
+  scaleFont,
+  shadows,
+  spacing,
+} from '../theme';
 
 type IonName = ComponentProps<typeof Ionicons>['name'];
 type Props = NativeStackScreenProps<WholesaleStackParamList, 'MarketplaceHome'>;
@@ -33,117 +43,169 @@ const CATS: { name: string; icon: IonName }[] = [
   { name: 'Safety', icon: 'medkit-outline' },
 ];
 
+/** Hero / label text — mirrors `HomeScreen` (Public Sans + muted white line). */
+const heroText = Platform.select({
+  ios: {},
+  android: { includeFontPadding: false },
+  default: {},
+});
+
 /**
  * Spec #40 — Wholesale marketplace home (search, categories, deals).
  */
 export const MarketplaceHomeScreen: FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const topPad = insets.top + spacing.lg;
+
   return (
     <ScreenScaffold>
-      <View
-        style={[
-          styles.hero,
-          shadows.md,
-          { paddingTop: insets.top + spacing.md },
-        ]}
-      >
-        <View style={styles.heroTop}>
-          <View>
-            <Text style={styles.heroTitle}>Wholesale</Text>
-            <Text style={styles.heroSub}>Stock up at trade prices</Text>
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Cart"
-            onPress={() => navigation.navigate('Cart')}
-            style={styles.cartBtn}
-          >
-            <Ionicons name="cart-outline" size={22} color={colors.white} />
-          </Pressable>
-        </View>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => navigation.navigate('SearchFilter')}
-          style={styles.search}
-        >
-          <Ionicons name="search" size={18} color={colors.muted} />
-          <TextInput
-            placeholder="Search SKUs, brands…"
-            placeholderTextColor={colors.muted}
-            style={styles.searchInput}
-            editable={false}
+      <View style={styles.heroShell}>
+        <View style={[styles.hero, shadows.hero, { paddingTop: topPad }]}>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.12)', 'transparent']}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={StyleSheet.absoluteFill}
             pointerEvents="none"
           />
-          <Ionicons name="options-outline" size={18} color={colors.primary} />
-        </Pressable>
+
+          <View style={styles.heroTop}>
+            <View style={styles.heroTitles}>
+              <Text style={[styles.heroEyebrow, heroText]}>Trade catalog</Text>
+              <Text style={[styles.heroTitle, heroText]}>Wholesale</Text>
+              <Text style={[styles.heroSub, heroText]}>
+                Stock up at B2B prices — same warehouse, electrician rates.
+              </Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Cart"
+              onPress={() => navigation.navigate('Cart')}
+              style={({ pressed }) => [
+                styles.cartBtn,
+                pressed && styles.pressedOpacity,
+              ]}
+            >
+              <Ionicons name="cart-outline" size={24} color={colors.white} />
+            </Pressable>
+          </View>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Search and filter catalogue"
+            onPress={() => navigation.navigate('SearchFilter')}
+            style={({ pressed }) => [
+              styles.search,
+              shadows.sm,
+              pressed && styles.searchPressed,
+            ]}
+          >
+            <View style={styles.searchIconCircle}>
+              <Ionicons name="search" size={18} color={colors.primary} />
+            </View>
+            <TextInput
+              placeholder="Search by SKU, brand, or product…"
+              placeholderTextColor={colors.muted}
+              style={[styles.searchInput, heroText]}
+              editable={false}
+              pointerEvents="none"
+            />
+            <View style={styles.filterHint}>
+              <Ionicons name="options-outline" size={18} color={colors.muted} />
+            </View>
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView
         style={styles.body}
         contentContainerStyle={styles.bodyContent}
         showsVerticalScrollIndicator={false}
+        nestedScrollEnabled
       >
-        <SectionTitle title="Categories" caption="Tap to browse" />
-        <View style={styles.catGrid}>
+        <SectionTitle
+          title="Shop by category"
+          caption="Swipe for more · tap to open"
+        />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.catRow}
+          nestedScrollEnabled
+        >
           {CATS.map((c) => (
             <Pressable
               key={c.name}
               style={({ pressed }) => [
-                styles.catTile,
-                pressed && styles.catPressed,
+                styles.catChip,
+                pressed && styles.pressedOpacity,
               ]}
               onPress={() =>
                 navigation.navigate('CategoryListing', { category: c.name })
               }
+              accessibilityRole="button"
+              accessibilityLabel={`Browse ${c.name}`}
             >
-              <View style={styles.catIcon}>
+              <View style={styles.catChipIcon}>
                 <Ionicons name={c.icon} size={20} color={colors.primary} />
               </View>
-              <Text style={styles.catTxt}>{c.name}</Text>
+              <Text style={[styles.catChipLabel, heroText]}>{c.name}</Text>
             </Pressable>
           ))}
-        </View>
+        </ScrollView>
 
         <SectionTitle
-          title="Today’s deals"
+          title="Deals for you"
+          caption="Today’s wholesale savings"
           trailingLabel="See all"
           onTrailingPress={() =>
             navigation.navigate('CategoryListing', { category: 'All' })
           }
         />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.dealRow}
-        >
-          {MOCK_PRODUCTS.map((p) => (
-            <ProductCard
-              key={p.id}
-              name={p.name}
-              brand={p.brand}
-              b2bPrice={p.b2b}
-              mrp={p.mrp}
-              savePct={p.savePct}
-              rating={p.rating}
-              layout="horizontal"
-              onPress={() =>
-                navigation.navigate('ProductDetail', { productId: p.id })
-              }
-            />
-          ))}
-        </ScrollView>
+        <View style={styles.dealsBleed}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.dealRow}
+            nestedScrollEnabled
+          >
+            {MOCK_PRODUCTS.map((p) => (
+              <ProductCard
+                key={p.id}
+                name={p.name}
+                brand={p.brand}
+                b2bPrice={p.b2b}
+                mrp={p.mrp}
+                savePct={p.savePct}
+                rating={p.rating}
+                layout="horizontal"
+                onPress={() =>
+                  navigation.navigate('ProductDetail', { productId: p.id })
+                }
+              />
+            ))}
+          </ScrollView>
+        </View>
 
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel="View order history"
           onPress={() => navigation.navigate('OrderHistory')}
           style={({ pressed }) => [
             styles.historyBtn,
-            pressed && styles.catPressed,
+            pressed && styles.pressedOpacity,
           ]}
         >
-          <Ionicons name="receipt-outline" size={18} color={colors.primary} />
-          <Text style={styles.historyTxt}>View order history</Text>
-          <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+          <View style={styles.historyIcon}>
+            <Ionicons name="receipt-outline" size={20} color={colors.primary} />
+          </View>
+          <View style={styles.historyTextCol}>
+            <Text style={[styles.historyTitle, heroText]}>Orders & receipts</Text>
+            <Text style={[styles.historySub, heroText]}>
+              Track deliveries and reorder in one tap
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.muted} />
         </Pressable>
       </ScrollView>
     </ScreenScaffold>
@@ -151,111 +213,187 @@ export const MarketplaceHomeScreen: FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  heroShell: {
+    width: '100%',
+    maxWidth: DESIGN_W,
+    alignSelf: 'center',
+  },
   hero: {
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
+    paddingBottom: spacing.xl,
     borderBottomLeftRadius: radii.hero,
     borderBottomRightRadius: radii.hero,
-    gap: spacing.md,
+    overflow: 'hidden',
+    gap: spacing.lg,
   },
   heroTop: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  heroTitles: {
+    flex: 1,
+    minWidth: 0,
+    gap: spacing.xs,
+  },
+  heroEyebrow: {
+    fontFamily: fonts.publicSemiBold,
+    fontSize: scaleFont(11),
+    color: 'rgba(255,255,255,0.78)',
+    textTransform: 'uppercase',
+    letterSpacing: 1.05,
+    marginBottom: 2,
   },
   heroTitle: {
     fontFamily: fonts.publicBold,
     fontSize: scaleFont(22),
+    lineHeight: scaleFont(28),
     color: colors.white,
   },
   heroSub: {
     fontFamily: fonts.publicMedium,
-    fontSize: scaleFont(13),
-    color: 'rgba(255,255,255,0.85)',
+    fontSize: scaleFont(14),
+    lineHeight: scaleFont(20),
+    color: '#e2e2e2',
+    marginTop: spacing.sm,
+    maxWidth: 280,
   },
   cartBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.md,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    width: 48,
+    height: 48,
+    borderRadius: radii.lg,
+    backgroundColor: colors.primaryMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
   search: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.md,
     backgroundColor: colors.white,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
+    paddingLeft: spacing.sm,
+    paddingRight: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.lg,
+    minHeight: 52,
+  },
+  searchPressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.995 }],
+  },
+  searchIconCircle: {
+    width: 40,
+    height: 40,
     borderRadius: radii.md,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchInput: {
     flex: 1,
     fontFamily: fonts.publicMedium,
     fontSize: scaleFont(14),
+    lineHeight: scaleFont(19),
     color: colors.text,
     paddingVertical: 0,
+  },
+  filterHint: {
+    paddingVertical: spacing.xs,
   },
   body: { flex: 1 },
   bodyContent: {
     padding: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.lg,
     paddingBottom: spacing.xxxl,
+    width: '100%',
+    maxWidth: DESIGN_W,
+    alignSelf: 'center',
   },
-  catGrid: {
+  catRow: {
+    gap: spacing.md,
+    paddingVertical: spacing.xs,
+    paddingRight: spacing.lg,
+    marginHorizontal: -2,
+  },
+  catChip: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  catTile: {
-    width: '23.4%',
-    aspectRatio: 1,
-    backgroundColor: colors.white,
-    borderRadius: radii.md,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg - 2,
+    backgroundColor: colors.white,
+    borderRadius: radii.lg,
+    borderWidth: 2,
+    borderColor: 'rgba(216,217,221,0.22)',
+    maxWidth: 200,
+    ...shadows.sm,
   },
-  catIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: radii.sm,
+  catChipIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: radii.md,
     backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 2,
   },
-  catTxt: {
+  catChipLabel: {
+    flex: 1,
+    flexShrink: 1,
     fontFamily: fonts.publicSemiBold,
-    fontSize: scaleFont(11.5),
+    fontSize: scaleFont(14),
+    lineHeight: scaleFont(19),
     color: colors.text,
-    textAlign: 'center',
+  },
+  dealsBleed: {
+    marginHorizontal: -spacing.lg,
+    marginTop: -spacing.sm,
   },
   dealRow: {
-    paddingRight: spacing.lg,
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xs,
+    paddingVertical: spacing.xs,
   },
-  catPressed: {
-    opacity: 0.94,
+  pressedOpacity: {
+    opacity: 0.9,
   },
   historyBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.md,
     backgroundColor: colors.white,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    borderRadius: radii.lg,
+    borderWidth: 2,
+    borderColor: 'rgba(216,217,221,0.16)',
+    ...shadows.sm,
   },
-  historyTxt: {
+  historyIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  historyTextCol: {
     flex: 1,
-    fontFamily: fonts.publicSemiBold,
-    fontSize: scaleFont(14),
-    color: colors.primary,
+    minWidth: 0,
+    gap: spacing.xs,
+  },
+  historyTitle: {
+    fontFamily: fonts.publicBold,
+    fontSize: scaleFont(16),
+    lineHeight: scaleFont(21),
+    color: colors.text,
+  },
+  historySub: {
+    fontFamily: fonts.publicMedium,
+    fontSize: scaleFont(12.5),
+    lineHeight: scaleFont(17),
+    color: colors.muted,
   },
 });

@@ -113,8 +113,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: radii.lg,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(216,217,221,0.45)',
+    borderWidth: 2,
+    borderColor: 'rgba(216,217,221,0.16)',
   },
   cardList: {
     flexDirection: 'row',
