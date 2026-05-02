@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ProfileStackParamList } from '../navigation/types';
-import { ScreenHeader } from '../components/ui';
+import { ScreenHeader, ScreenScaffold } from '../components/ui';
 import { colors, fonts, radii, scaleFont, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'TicketChat'>;
@@ -71,68 +71,72 @@ export const TicketChatScreen: FC<Props> = ({ navigation, route }) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScreenHeader
-        title={route.params.ticketId}
-        subtitle="Open · Support"
-        onBack={() => navigation.goBack()}
-      />
-
-      <View style={styles.statusBanner}>
-        <View style={styles.statusDot} />
-        <Text style={styles.statusTxt}>Support is online · avg 5 min reply</Text>
-      </View>
-
-      <ScrollView
-        contentContainerStyle={styles.thread}
-        showsVerticalScrollIndicator={false}
+    <ScreenScaffold>
+      <KeyboardAvoidingView
+        style={styles.kav}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {thread.map((m) => (
-          <Bubble key={m.id} message={m} />
-        ))}
-      </ScrollView>
-
-      <View
-        style={[
-          styles.footer,
-          { paddingBottom: Math.max(insets.bottom, spacing.sm) },
-        ]}
-      >
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Attach file"
-          style={styles.iconBtn}
-          onPress={() => {}}
-        >
-          <Ionicons name="attach" size={20} color={colors.muted} />
-        </Pressable>
-        <TextInput
-          value={msg}
-          onChangeText={setMsg}
-          placeholder="Message support"
-          style={styles.input}
-          placeholderTextColor={colors.mutedSoft}
-          multiline
+        <ScreenHeader
+          title={route.params.ticketId}
+          subtitle="Open · Support"
+          onBack={() => navigation.goBack()}
         />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Send message"
-          accessibilityState={{ disabled: !msg.trim() }}
-          disabled={!msg.trim()}
-          onPress={send}
-          style={({ pressed }) => [
-            styles.sendBtn,
-            !msg.trim() && styles.sendBtnDisabled,
-            pressed && { transform: [{ scale: 0.96 }] },
+
+        <View style={styles.statusBanner}>
+          <View style={styles.statusDot} />
+          <Text style={styles.statusTxt}>
+            Support is online · avg 5 min reply
+          </Text>
+        </View>
+
+        <ScrollView
+          contentContainerStyle={styles.thread}
+          showsVerticalScrollIndicator={false}
+        >
+          {thread.map((m) => (
+            <Bubble key={m.id} message={m} />
+          ))}
+        </ScrollView>
+
+        <View
+          style={[
+            styles.footer,
+            { paddingBottom: Math.max(insets.bottom, spacing.sm) },
           ]}
         >
-          <Ionicons name="send" size={16} color={colors.white} />
-        </Pressable>
-      </View>
-    </KeyboardAvoidingView>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Attach file"
+            style={styles.iconBtn}
+            onPress={() => {}}
+          >
+            <Ionicons name="attach" size={20} color={colors.muted} />
+          </Pressable>
+          <TextInput
+            value={msg}
+            onChangeText={setMsg}
+            placeholder="Message support"
+            style={styles.input}
+            placeholderTextColor={colors.mutedSoft}
+            multiline
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Send message"
+            accessibilityState={{ disabled: !msg.trim() }}
+            disabled={!msg.trim()}
+            onPress={send}
+            style={({ pressed }) => [
+              styles.sendBtn,
+              !msg.trim() && styles.sendBtnDisabled,
+              pressed && { transform: [{ scale: 0.96 }] },
+            ]}
+          >
+            <Ionicons name="send" size={16} color={colors.white} />
+          </Pressable>
+        </View>
+      </KeyboardAvoidingView>
+    </ScreenScaffold>
   );
 };
 
@@ -170,7 +174,7 @@ const Bubble: FC<{ message: Message }> = ({ message }) => {
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.pageBg },
+  kav: { flex: 1 },
   statusBanner: {
     flexDirection: 'row',
     alignItems: 'center',

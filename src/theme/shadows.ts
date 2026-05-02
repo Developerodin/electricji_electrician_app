@@ -32,6 +32,8 @@ export const shadows = {
   md: make(2, 8, 0.08, 3),
   lg: make(4, 14, 0.12, 6),
   hero: make(7, 13, 0.14, 8),
+  /** Bottom tab chrome — mirrors delivery `MainTabBar` upward shadow (#4089:2253). */
+  tabBar: make(-2, 8, 0.06, 12),
   pressedNudge: make(0, 2, 0.04, 0),
 } as const;
 

@@ -38,7 +38,10 @@ export const QuizScreen: FC<Props> = ({ navigation }) => {
   if (submitted) {
     return (
       <ScreenScaffold>
-        <ScreenHeader title="Quiz result" />
+        <ScreenHeader
+          title="Quiz result"
+          onBack={() => navigation.goBack()}
+        />
         <View style={styles.resultBody}>
           <View style={styles.resultBadge}>
             <Ionicons name="trophy" size={42} color={colors.white} />

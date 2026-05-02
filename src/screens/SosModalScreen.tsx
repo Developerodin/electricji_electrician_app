@@ -125,7 +125,7 @@ export const SosModalScreen: FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.white, paddingHorizontal: spacing.lg },
+  root: { flex: 1, backgroundColor: colors.pageBg, paddingHorizontal: spacing.lg },
   heroWrap: {
     alignItems: 'center',
     justifyContent: 'center',

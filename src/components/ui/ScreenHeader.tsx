@@ -16,7 +16,7 @@ export type ScreenHeaderProps = {
 };
 
 /**
- * Top app bar — supports a centered title (default) or a red rounded hero variant.
+ * Top app bar — centered title (delivery `ScreenHeader` white band + hairline) or red rounded hero variant.
  */
 export const ScreenHeader: FC<ScreenHeaderProps> = ({
   title,
@@ -35,8 +35,11 @@ export const ScreenHeader: FC<ScreenHeaderProps> = ({
   return (
     <View
       style={[
-        styles.wrap,
-        { paddingTop: topInset + 6, paddingBottom: hero ? 22 : 16 },
+        {
+          paddingTop: topInset + 6,
+          paddingBottom: hero ? 22 : 14,
+          paddingHorizontal: hero ? spacing.md : 10,
+        },
         hero ? styles.wrapHero : styles.wrapWhite,
         hero && shadows.md,
       ]}
@@ -86,9 +89,6 @@ export const ScreenHeader: FC<ScreenHeaderProps> = ({
 };
 
 const styles = StyleSheet.create({
-  wrap: {
-    paddingHorizontal: spacing.md,
-  },
   wrapWhite: {
     backgroundColor: colors.white,
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 44,
+    minHeight: 36,
   },
   titleCol: {
     flex: 1,

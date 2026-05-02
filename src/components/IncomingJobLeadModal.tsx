@@ -1,17 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { FC } from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  Dimensions,
   Easing,
   Modal,
+  Platform,
+  Pressable,
   StyleSheet,
   Text,
+  Vibration,
   View,
 } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 import { MOCK_LEADS } from '../mocks';
-import { colors, fonts, radii, scaleFont, shadows, spacing } from '../theme';
-import { AppButton } from './ui/Button';
+import { colors, fonts, spacing } from '../theme';
 
 export type IncomingJobLeadModalProps = {
   visible: boolean;
@@ -21,9 +25,17 @@ export type IncomingJobLeadModalProps = {
 };
 
 const COUNTDOWN = 30;
+const SCREEN_W = Dimensions.get('window').width;
+const CARD_W = Math.min(380, SCREEN_W - 32);
+
+const RING_SIZE = 84;
+const RING_STROKE = 6;
+const RING_R = (RING_SIZE - RING_STROKE) / 2;
+const RING_C = 2 * Math.PI * RING_R;
 
 /**
- * Spec #21 — incoming job lead modal with countdown progress and entrance animation.
+ * Incoming job — visual parity with delivery `OrderAlertModal` (dark overlay, LIVE badge + ring
+ * timer, lifted offer card, Reject pill / Accept CTA row). Behaviour unchanged from spec #21.
  */
 export const IncomingJobLeadModal: FC<IncomingJobLeadModalProps> = ({
   visible,
@@ -43,10 +55,11 @@ export const IncomingJobLeadModal: FC<IncomingJobLeadModalProps> = ({
     }
     Animated.timing(slide, {
       toValue: 1,
-      duration: 220,
-      easing: Easing.out(Easing.ease),
+      duration: 280,
+      easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
+    Vibration.vibrate([0, 380, 120, 380]);
     const t = setInterval(() => setLeft((s) => (s <= 0 ? 0 : s - 1)), 1000);
     return () => clearInterval(t);
   }, [slide, visible]);
@@ -57,97 +70,175 @@ export const IncomingJobLeadModal: FC<IncomingJobLeadModalProps> = ({
     }
   }, [left, onClose, visible]);
 
-  const progress = useMemo(() => left / COUNTDOWN, [left]);
-
   const translateY = slide.interpolate({
     inputRange: [0, 1],
-    outputRange: [40, 0],
+    outputRange: [48, 0],
   });
 
+  const ringOpacity = slide;
+
+  /** Remaining arc: full at start, depleted when timer hits 0 */
+  const strokeDashoffset =
+    left <= 0 ? RING_C : RING_C * (1 - left / COUNTDOWN);
+
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.backdrop}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      presentationStyle="overFullScreen"
+      statusBarTranslucent
+      onRequestClose={onReject}
+    >
+      <View style={styles.overlay}>
         <Animated.View
           style={[
-            styles.sheet,
-            shadows.lg,
-            { opacity: slide, transform: [{ translateY }] },
+            styles.topChrome,
+            {
+              opacity: ringOpacity,
+            },
+          ]}
+        >
+          <View style={styles.topRow}>
+            <View style={styles.liveBadge}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveText}>LIVE LEAD</Text>
+            </View>
+            <View style={styles.ringWrap}>
+              <Svg width={RING_SIZE} height={RING_SIZE}>
+                <Circle
+                  cx={RING_SIZE / 2}
+                  cy={RING_SIZE / 2}
+                  r={RING_R}
+                  stroke={colors.textSoft}
+                  strokeWidth={RING_STROKE}
+                  fill="transparent"
+                />
+                <Circle
+                  cx={RING_SIZE / 2}
+                  cy={RING_SIZE / 2}
+                  r={RING_R}
+                  stroke={colors.white}
+                  strokeWidth={RING_STROKE}
+                  fill="transparent"
+                  strokeLinecap="round"
+                  strokeDasharray={`${RING_C} ${RING_C}`}
+                  strokeDashoffset={strokeDashoffset}
+                  transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
+                />
+              </Svg>
+              <View style={styles.ringCenter}>
+                <Text style={styles.ringText}>{left}</Text>
+                <Text style={styles.ringHint}>sec</Text>
+              </View>
+            </View>
+          </View>
+          <Text style={styles.singleHint}>Respond before time runs out</Text>
+        </Animated.View>
+
+        <Animated.View
+          style={[
+            styles.cardOuter,
+            {
+              opacity: slide,
+              transform: [{ translateY }],
+            },
           ]}
           accessibilityViewIsModal
         >
-          <View style={styles.headRow}>
-            <View style={styles.headTitleCol}>
-              <View style={styles.tagRow}>
-                <View style={styles.liveDot} />
-                <Text style={styles.tagTxt}>NEW LEAD</Text>
+          <View style={styles.card}>
+            <View style={styles.header}>
+              <View style={styles.typeBadge}>
+                <Ionicons name="construct" size={14} color={colors.primary} />
+                <Text style={styles.typeBadgeText} numberOfLines={1}>
+                  {lead.serviceType}
+                </Text>
               </View>
-              <Text style={styles.title}>Job available near you</Text>
+              <Text style={styles.orderIdPill}>{lead.id}</Text>
             </View>
-            <View style={styles.timerWrap}>
-              <Text style={styles.timerTxt}>{left}</Text>
-              <Text style={styles.timerUnit}>s</Text>
-            </View>
-          </View>
 
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { flex: progress }]} />
-            <View style={[styles.progressRest, { flex: 1 - progress }]} />
-          </View>
+            <View style={styles.section}>
+              <View style={styles.row}>
+                <View
+                  style={[
+                    styles.iconDot,
+                    { backgroundColor: colors.success },
+                  ]}
+                />
+                <View style={styles.addr}>
+                  <Text style={styles.addrLabel}>SERVICE</Text>
+                  <Text style={styles.addrName}>{lead.serviceType}</Text>
+                  <Text style={styles.addrLine}>{lead.area}</Text>
+                </View>
+              </View>
+              <View style={styles.railWrap}>
+                <View style={styles.rail} />
+              </View>
+              <View style={styles.row}>
+                <View
+                  style={[
+                    styles.iconDot,
+                    { backgroundColor: colors.primary },
+                  ]}
+                />
+                <View style={styles.addr}>
+                  <Text style={styles.addrLabel}>PAYOUT</Text>
+                  <Text style={styles.addrName}>{lead.payout}</Text>
+                  <Text style={styles.addrLine}>
+                    {lead.surge ?? 'Includes platform fee'}
+                  </Text>
+                </View>
+              </View>
+            </View>
 
-          <View style={styles.bodyRow}>
-            <View style={styles.iconWrap}>
-              <Ionicons
-                name="construct-outline"
-                size={26}
-                color={colors.primary}
-              />
+            <View style={styles.statsRow}>
+              <View style={styles.stat}>
+                <Ionicons name="time-outline" size={18} color={colors.muted} />
+                <Text style={styles.statText}>{lead.timeLabel}</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.stat}>
+                <Ionicons name="hourglass-outline" size={18} color={colors.muted} />
+                <Text style={styles.statText}>{lead.durationMin} min</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.stat}>
+                <Ionicons name="star" size={18} color={colors.muted} />
+                <Text style={styles.statText}>{lead.customerRating}</Text>
+              </View>
             </View>
-            <View style={styles.bodyCol}>
-              <Text style={styles.service}>{lead.serviceType}</Text>
-              <Text style={styles.meta}>{lead.area}</Text>
-            </View>
-            <View style={styles.payoutCol}>
-              <Text style={styles.payout}>{lead.payout}</Text>
-              {lead.surge ? (
-                <Text style={styles.surge}>{lead.surge}</Text>
-              ) : null}
-            </View>
-          </View>
 
-          <View style={styles.metaRow}>
-            <View style={styles.metaPill}>
-              <Ionicons
-                name="hourglass-outline"
-                size={12}
-                color={colors.muted}
-              />
-              <Text style={styles.metaPillTxt}>{lead.durationMin}m</Text>
+            <View style={styles.earnBar}>
+              <Text style={styles.earnLabel}>ESTIMATED EARNINGS</Text>
+              <Text style={styles.earnAmount}>{lead.payout}</Text>
             </View>
-            <View style={styles.metaPill}>
-              <Ionicons name="star" size={12} color={colors.muted} />
-              <Text style={styles.metaPillTxt}>{lead.customerRating}</Text>
-            </View>
-            <View style={styles.metaPill}>
-              <Ionicons name="time-outline" size={12} color={colors.muted} />
-              <Text style={styles.metaPillTxt}>{lead.timeLabel}</Text>
-            </View>
-          </View>
 
-          <View style={styles.actions}>
-            <AppButton
-              label="Reject"
-              variant="outline"
-              onPress={onReject}
-              style={styles.flex}
-            />
-            <AppButton
-              label="Accept"
-              onPress={onAccept}
-              style={styles.flex}
-              rightIcon={
-                <Ionicons name="arrow-forward" size={16} color={colors.white} />
-              }
-            />
+            <View style={styles.cardActionsHairline} />
+            <View style={styles.cardActions}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Reject offer"
+                onPress={onReject}
+                style={({ pressed }) => [
+                  styles.cardRejectBtn,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text style={styles.cardRejectLabel}>Reject</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Accept offer"
+                onPress={onAccept}
+                style={({ pressed }) => [
+                  styles.cardAcceptBtn,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Ionicons name="checkmark-circle" size={22} color={colors.white} />
+                <Text style={styles.cardAcceptLabel}>Accept</Text>
+              </Pressable>
+            </View>
           </View>
         </Animated.View>
       </View>
@@ -156,148 +247,261 @@ export const IncomingJobLeadModal: FC<IncomingJobLeadModalProps> = ({
 };
 
 const styles = StyleSheet.create({
-  backdrop: {
+  overlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
-    justifyContent: 'flex-end',
-    padding: spacing.lg,
+    backgroundColor: 'rgba(0,0,0,0.72)',
+    paddingTop: Platform.OS === 'ios' ? 54 : 36,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
   },
-  sheet: {
-    backgroundColor: colors.white,
-    borderRadius: radii.lg,
-    padding: spacing.lg,
-    gap: spacing.sm + 2,
-    marginBottom: spacing.lg,
+  topChrome: {
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    gap: 8,
   },
-  headRow: {
+  topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    justifyContent: 'space-between',
   },
-  headTitleCol: { flex: 1, gap: spacing.xs },
-  tagRow: {
+  liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    backgroundColor: colors.primarySoft,
-    borderRadius: radii.pill,
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   liveDot: {
-    width: 7,
-    height: 7,
+    width: 8,
+    height: 8,
     borderRadius: 4,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.successBright,
   },
-  tagTxt: {
+  liveText: {
     fontFamily: fonts.publicBold,
-    fontSize: scaleFont(10.5),
+    fontSize: 12,
+    color: colors.white,
+    letterSpacing: 1.2,
+  },
+  ringWrap: {
+    width: RING_SIZE,
+    height: RING_SIZE,
+    position: 'relative',
+  },
+  ringCenter: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ringText: {
+    fontFamily: fonts.publicBold,
+    fontSize: 22,
+    color: colors.white,
+    lineHeight: 24,
+  },
+  ringHint: {
+    fontFamily: fonts.publicMedium,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.75)',
+    letterSpacing: 0.8,
+  },
+  singleHint: {
+    fontFamily: fonts.publicMedium,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.75)',
+    textAlign: 'center',
+  },
+  cardOuter: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  card: {
+    width: CARD_W,
+    alignSelf: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 28,
+    padding: 20,
+    gap: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.shadow,
+        shadowOffset: { width: 0, height: 20 },
+        shadowOpacity: 0.25,
+        shadowRadius: 30,
+      },
+      android: { elevation: 24 },
+    }),
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  orderIdPill: {
+    fontFamily: fonts.publicBold,
+    fontSize: 11,
+    color: colors.muted,
+    letterSpacing: 0.6,
+    backgroundColor: '#f4f4f5',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  typeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.primarySoft,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    maxWidth: '62%',
+  },
+  typeBadgeText: {
+    fontFamily: fonts.publicBold,
+    fontSize: 12,
     color: colors.primary,
     letterSpacing: 0.6,
+    flexShrink: 1,
   },
-  title: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(18),
-    color: colors.text,
-  },
-  timerWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.pill,
-    borderWidth: 3,
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  timerTxt: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(18),
-    color: colors.primary,
-  },
-  timerUnit: {
-    fontFamily: fonts.publicSemiBold,
-    fontSize: scaleFont(11),
-    color: colors.primary,
-    marginTop: 6,
-    marginLeft: 1,
-  },
-  progressTrack: {
-    flexDirection: 'row',
-    height: 5,
-    borderRadius: radii.pill,
-    overflow: 'hidden',
-    backgroundColor: colors.borderLight,
-  },
-  progressFill: {
-    backgroundColor: colors.primary,
-  },
-  progressRest: {},
-  bodyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingTop: spacing.sm,
-  },
-  iconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: radii.md,
-    backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bodyCol: { flex: 1, gap: 2 },
-  service: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(16),
-    color: colors.text,
-  },
-  meta: {
-    fontFamily: fonts.publicRegular,
-    fontSize: scaleFont(13),
-    color: colors.muted,
-  },
-  payoutCol: { alignItems: 'flex-end' },
-  payout: {
-    fontFamily: fonts.publicBold,
-    fontSize: scaleFont(20),
-    color: colors.primary,
-  },
-  surge: {
-    fontFamily: fonts.publicSemiBold,
-    fontSize: scaleFont(11.5),
-    color: colors.success,
-    marginTop: 2,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    flexWrap: 'wrap',
-  },
-  metaPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  section: {
     gap: 4,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radii.pill,
-    backgroundColor: colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
   },
-  metaPillTxt: {
-    fontFamily: fonts.publicMedium,
-    fontSize: scaleFont(11.5),
-    color: colors.textSoft,
-  },
-  actions: {
+  row: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.xs,
+    gap: 12,
+    alignItems: 'flex-start',
   },
-  flex: { flex: 1 },
+  iconDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    marginTop: 6,
+  },
+  addr: {
+    flex: 1,
+    gap: 2,
+  },
+  addrLabel: {
+    fontFamily: fonts.publicBold,
+    fontSize: 10,
+    color: colors.muted,
+    letterSpacing: 1,
+  },
+  addrName: {
+    fontFamily: fonts.publicBold,
+    fontSize: 15,
+    color: colors.text,
+  },
+  addrLine: {
+    fontFamily: fonts.publicMedium,
+    fontSize: 12,
+    color: colors.muted,
+    lineHeight: 17,
+  },
+  railWrap: {
+    paddingLeft: 7,
+    paddingVertical: 4,
+  },
+  rail: {
+    width: 2,
+    height: 14,
+    backgroundColor: '#d1d5db',
+    borderRadius: 1,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    backgroundColor: '#fafbfc',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+  },
+  stat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: '#d8dbe0',
+  },
+  statText: {
+    fontFamily: fonts.publicSemiBold,
+    fontSize: 13,
+    color: colors.text,
+  },
+  earnBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.successSoft,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(34,153,121,0.18)',
+  },
+  earnLabel: {
+    fontFamily: fonts.publicSemiBold,
+    fontSize: 11,
+    color: colors.muted,
+    letterSpacing: 0.8,
+  },
+  earnAmount: {
+    fontFamily: fonts.publicBold,
+    fontSize: 22,
+    color: colors.success,
+  },
+  cardActionsHairline: {
+    height: 1,
+    backgroundColor: colors.borderLight,
+    marginTop: 4,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingTop: 16,
+  },
+  cardRejectBtn: {
+    flex: 1,
+    borderWidth: 1.5,
+    borderColor: '#cecece',
+    borderRadius: 74,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.white,
+  },
+  cardRejectLabel: {
+    fontFamily: fonts.publicBold,
+    fontSize: 15,
+    color: colors.text,
+  },
+  cardAcceptBtn: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: colors.primary,
+    borderRadius: 74,
+    paddingVertical: 14,
+  },
+  cardAcceptLabel: {
+    fontFamily: fonts.publicBold,
+    fontSize: 15,
+    color: colors.white,
+  },
+  pressed: {
+    opacity: 0.9,
+  },
 });

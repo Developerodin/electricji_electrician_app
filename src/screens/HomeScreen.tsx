@@ -20,22 +20,14 @@ import type { HomeStackParamList } from '../navigation/types';
 import { IncomingJobLeadModal } from '../components/IncomingJobLeadModal';
 import { AppButton } from '../components/ui';
 import { MOCK_LEADS, TECHNICIAN_PROFILE } from '../mocks';
+import { colors, contentMaxWidth, DESIGN_W, fonts } from '../theme';
 
-const DESIGN_W = 412;
-const RED = '#d9232d';
-const PAGE_BG = '#f6f6f8';
-const NOTIF_BG = '#ae1c24';
-const STATUS_BAR_BG = '#880e1a';
-const TOGGLE_ON = '#229979';
-const STAT_CARD_ANDROID_BG = '#ae1c24';
-const MUTED = '#77878f';
-const TEXT = '#202020';
 const { width: SCREEN_W } = Dimensions.get('window');
 
 type IonName = ComponentProps<typeof Ionicons>['name'];
 
 const SCALE = SCREEN_W / DESIGN_W;
-const CONTENT_MAX = Math.min(380, SCREEN_W - 32);
+const CONTENT_MAX = contentMaxWidth;
 
 function greetingForHour(h: number): string {
   if (h < 12) return 'Good Morning';
@@ -283,7 +275,7 @@ export const HomeScreen: FC = () => {
                 {TECHNICIAN_PROFILE.grade}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={MUTED} />
+            <Ionicons name="chevron-forward" size={20} color={colors.muted} />
           </Pressable>
 
           <View style={styles.taskCard}>
@@ -291,9 +283,9 @@ export const HomeScreen: FC = () => {
             <View style={styles.taskBody}>
               <View style={styles.timelineBlock}>
                 <View style={styles.timelineIcons}>
-                  <Ionicons name="location-sharp" size={22} color={TOGGLE_ON} />
+                  <Ionicons name="location-sharp" size={22} color={colors.success} />
                   <TimelineRail height={36} />
-                  <Ionicons name="location-sharp" size={22} color={RED} />
+                  <Ionicons name="location-sharp" size={22} color={colors.primary} />
                 </View>
                 <View style={styles.timelineCopy}>
                   <View>
@@ -322,11 +314,11 @@ export const HomeScreen: FC = () => {
               <View style={styles.hairline} />
               <View style={styles.metricsRow}>
                 <View style={styles.metricItem}>
-                  <Ionicons name="location-outline" size={22} color={MUTED} />
+                  <Ionicons name="location-outline" size={22} color={colors.muted} />
                   <Text style={styles.metricText}>8.2 km</Text>
                 </View>
                 <View style={styles.metricItem}>
-                  <Ionicons name="time-outline" size={22} color={MUTED} />
+                  <Ionicons name="time-outline" size={22} color={colors.muted} />
                   <Text style={styles.metricText}>22 mins</Text>
                 </View>
               </View>
@@ -384,7 +376,7 @@ export const HomeScreen: FC = () => {
                 accessibilityRole="button"
                 accessibilityLabel={q.label}
               >
-                <Ionicons name={q.icon} size={16} color={RED} />
+                <Ionicons name={q.icon} size={16} color={colors.primary} />
                 <Text style={styles.quickChipTxt}>{q.label}</Text>
               </Pressable>
             ))}
@@ -411,11 +403,18 @@ export const HomeScreen: FC = () => {
         </View>
       </ScrollView>
 
-      <Modal transparent visible={confirmOn} animationType="fade">
+      <Modal
+        transparent
+        visible={confirmOn}
+        animationType="fade"
+        presentationStyle="overFullScreen"
+        statusBarTranslucent
+        onRequestClose={() => setConfirmOn(false)}
+      >
         <View style={confirmStyles.confirmBackdrop}>
           <View style={confirmStyles.confirmSheet}>
             <View style={confirmStyles.confirmIcon}>
-              <Ionicons name="flash" size={22} color={RED} />
+              <Ionicons name="flash" size={22} color={colors.primary} />
             </View>
             <Text style={confirmStyles.confirmTitle}>Go online?</Text>
             <Text style={confirmStyles.confirmBody}>
@@ -457,40 +456,54 @@ export const HomeScreen: FC = () => {
 const confirmStyles = StyleSheet.create({
   confirmBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(17,24,39,0.45)',
+    backgroundColor: 'rgba(0,0,0,0.72)',
     justifyContent: 'center',
     padding: 20,
   },
   confirmSheet: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 20,
-    gap: 8,
+    maxWidth: Math.min(380, SCREEN_W - 32),
+    width: '100%',
+    alignSelf: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 28,
+    padding: 22,
+    gap: 10,
     alignItems: 'flex-start',
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.shadow,
+        shadowOffset: { width: 0, height: 20 },
+        shadowOpacity: 0.2,
+        shadowRadius: 24,
+      },
+      android: { elevation: 20 },
+    }),
   },
   confirmIcon: {
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: 'rgba(217,35,45,0.12)',
+    backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   confirmTitle: {
-    fontFamily: 'PublicSans_700Bold',
+    fontFamily: fonts.publicBold,
     fontSize: 18,
-    color: TEXT,
+    color: colors.text,
   },
   confirmBody: {
-    fontFamily: 'PublicSans_400Regular',
+    fontFamily: fonts.publicRegular,
     fontSize: 13.5,
-    color: MUTED,
+    color: colors.muted,
+    lineHeight: 20,
   },
   confirmRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
     width: '100%',
-    marginTop: 8,
+    marginTop: 12,
+    paddingTop: 4,
   },
   flex: { flex: 1 },
 });
@@ -498,14 +511,14 @@ const confirmStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: PAGE_BG,
+    backgroundColor: colors.pageBg,
   },
   scroll: { flex: 1 },
   scrollContent: {
     paddingBottom: 24,
   },
   heroRed: {
-    backgroundColor: RED,
+    backgroundColor: colors.primary,
     paddingHorizontal: 16,
     paddingBottom: 16,
     borderBottomLeftRadius: 32,
@@ -541,7 +554,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 15,
-    backgroundColor: NOTIF_BG,
+    backgroundColor: colors.primaryMuted,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -555,7 +568,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#4ade80',
     borderWidth: 1.5,
-    borderColor: NOTIF_BG,
+    borderColor: colors.primaryMuted,
   },
   heroPanel: {
     gap: 16,
@@ -586,7 +599,7 @@ const styles = StyleSheet.create({
         shadowRadius: 10.4,
       },
       android: {
-        backgroundColor: STAT_CARD_ANDROID_BG,
+        backgroundColor: colors.primaryMuted,
         elevation: 0,
       },
       default: {
@@ -607,7 +620,7 @@ const styles = StyleSheet.create({
     ...(Platform.OS === 'android' && { includeFontPadding: false }),
   },
   onlineBar: {
-    backgroundColor: STATUS_BAR_BG,
+    backgroundColor: colors.primaryDark,
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
@@ -665,7 +678,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   toggleTrackOn: {
-    backgroundColor: TOGGLE_ON,
+    backgroundColor: colors.success,
     borderWidth: 0.5,
     borderColor: 'rgba(34,153,121,0.15)',
     alignItems: 'flex-end',
@@ -698,12 +711,12 @@ const styles = StyleSheet.create({
   tasksTitle: {
     fontFamily: 'PublicSans_700Bold',
     fontSize: 20 * SCALE,
-    color: TEXT,
+    color: colors.text,
   },
   viewHistory: {
     fontFamily: 'PublicSans_700Bold',
     fontSize: 16 * SCALE,
-    color: RED,
+    color: colors.primary,
   },
   perfStripe: {
     flexDirection: 'row',
@@ -723,13 +736,13 @@ const styles = StyleSheet.create({
   perfStripeLabel: {
     fontFamily: 'PublicSans_600SemiBold',
     fontSize: 13 * SCALE,
-    color: MUTED,
+    color: colors.muted,
     letterSpacing: 0.2,
   },
   perfStripeSub: {
     fontFamily: 'PublicSans_700Bold',
     fontSize: 15 * SCALE,
-    color: TEXT,
+    color: colors.text,
   },
   taskCard: {
     backgroundColor: '#FFFFFF',
@@ -752,7 +765,7 @@ const styles = StyleSheet.create({
   orderId: {
     fontFamily: 'PublicSans_700Bold',
     fontSize: 16 * SCALE,
-    color: MUTED,
+    color: colors.muted,
     letterSpacing: 0.64,
   },
   taskBody: {
@@ -785,14 +798,14 @@ const styles = StyleSheet.create({
   phaseLabel: {
     fontFamily: 'PublicSans_700Bold',
     fontSize: 16 * SCALE,
-    color: MUTED,
+    color: colors.muted,
     letterSpacing: 0.64,
     marginBottom: 4,
   },
   phaseAddr: {
     fontFamily: 'PublicSans_600SemiBold',
     fontSize: 16 * SCALE,
-    color: TEXT,
+    color: colors.text,
     lineHeight: 22,
   },
   timePillWrap: {
@@ -816,7 +829,7 @@ const styles = StyleSheet.create({
   price: {
     fontFamily: 'PublicSans_700Bold',
     fontSize: 24 * SCALE,
-    color: TEXT,
+    color: colors.text,
   },
   metricsBlock: {
     gap: 12,
@@ -840,7 +853,7 @@ const styles = StyleSheet.create({
   metricText: {
     fontFamily: 'PublicSans_600SemiBold',
     fontSize: 16 * SCALE,
-    color: MUTED,
+    color: colors.muted,
   },
   taskActions: {
     flexDirection: 'row',
@@ -860,13 +873,13 @@ const styles = StyleSheet.create({
   btnOutlineLabel: {
     fontFamily: 'PublicSans_700Bold',
     fontSize: 16 * SCALE,
-    color: TEXT,
+    color: colors.text,
     letterSpacing: 0.192,
   },
   btnPrimary: {
     flex: 1,
     minWidth: 160,
-    backgroundColor: RED,
+    backgroundColor: colors.primary,
     borderRadius: 74,
     paddingHorizontal: 28,
     minHeight: 48,
@@ -907,7 +920,7 @@ const styles = StyleSheet.create({
   quickChipTxt: {
     fontFamily: 'PublicSans_600SemiBold',
     fontSize: 13 * SCALE,
-    color: TEXT,
+    color: colors.text,
   },
   warnCard: {
     flexDirection: 'row',
@@ -928,7 +941,7 @@ const styles = StyleSheet.create({
   warnAction: {
     fontFamily: 'PublicSans_700Bold',
     fontSize: 13 * SCALE,
-    color: RED,
+    color: colors.primary,
   },
   pressedOpacity: {
     opacity: 0.92,

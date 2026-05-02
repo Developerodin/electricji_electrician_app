@@ -190,6 +190,7 @@ Root screen names → typical TSX files:
 
 - **`src/theme/`** — prefer **`colors`**, **`fonts`**, **`spacing`**, **`shadows`** from `theme/index.ts` for new UI.
 - **`src/components/ui/`** — reusable controls; export barrel `components/ui/index.ts` where applicable.
+- **`IncomingJobLeadModal.tsx`** — incoming job overlay: aligns with delivery **`OrderAlertModal`** (full-screen dim `rgba(0,0,0,0.72)`, LIVE chip + SVG ring countdown, large white card `borderRadius` 28, stats strip, green earnings bar, Reject pill / Accept CTA row). Mounted from **`HomeScreen`** (`leadOpen`).
 - **`KycStepChrome.tsx`** — shared KYC chrome: white header (`icon-back`, centered title, Help or “Skip for now”), hairline divider, red progress track, `#f6f6f8` scroll body, sticky white footer (use `KycDeliveryPrimaryButton` / outline variants from `components/ui/KycDeliveryButtons.tsx`). Matches delivery **`KycVerificationScreen`** / **`VehicleDetailsScreen`** layout.
 
 ---
@@ -216,6 +217,7 @@ If Figma exports SVG-masked PNGs that look soft, run **`npm run assets:rasterize
 
 | Question | Where to look |
 |----------|----------------|
+| Incoming lead / countdown modal (technician)? | **`src/components/IncomingJobLeadModal.tsx`** (+ **`HomeScreen`**) |
 | Where is navigation defined? | `src/navigation/*.tsx`, **`types.ts`** |
 | What route params exist? | **`navigation/types.ts`** |
 | Where is screen X? | **`src/screens/<Name>Screen.tsx`** — confirm wiring in **`*Stack.tsx`** or **`RootNavigator.tsx`** |
